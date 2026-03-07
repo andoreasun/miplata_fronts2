@@ -91,17 +91,24 @@ function ConsultarMovimientos() {
 
     if (movimientos.length === 0) {
         console.log("No hay movimientos registrados.");
-    } else {
-        let i = 0;
-        while (i < movimientos.length) {
-            let mov = movimientos[i];
-            console.log(mov.fecha + " | " + mov.concepto + " | $" + mov.valor + " | $" + mov.saldo);
-            i++;
-        }
+        alert("No hay movimientos registrados.");
+        return;
+    }
+
+    let texto = "--- TUS MOVIMIENTOS ---\n\n";
+    let i = 0;
+    while (i < movimientos.length) {
+        let mov = movimientos[i];
+        console.log(mov.fecha + " | " + mov.concepto + " | $" + mov.valor + " | $" + mov.saldo);
+        texto = texto + mov.fecha + "\n";
+        texto = texto + mov.concepto + " | $" + mov.valor + "\n";
+        texto = texto + "Saldo: $" + mov.saldo + "\n";
+        texto = texto + "-------------------\n";
+        i++;
     }
 
     console.log("==========================================");
-    alert("Movimientos mostrados en consola. Abre DevTools (F12) para verlos.");
+    alert(texto); // ✅ SE VE EN PANTALLA
 }
 
 function Transferir() {
@@ -166,3 +173,4 @@ function Transferir() {
     console.log("==========================================");
     alert("Transferencia exitosa ✅\nDestinatario: " + destinatario + "\nMonto: $" + monto + "\nNuevo saldo: $" + usuarioActivo.saldo);
 }
+```
