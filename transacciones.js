@@ -108,7 +108,7 @@ function ConsultarMovimientos() {
     }
 
     console.log("==========================================");
-    alert(texto); // ✅ SE VE EN PANTALLA
+    alert(texto);
 }
 
 function Transferir() {
@@ -173,4 +173,3 @@ function Transferir() {
     console.log("==========================================");
     alert("Transferencia exitosa ✅\nDestinatario: " + destinatario + "\nMonto: $" + monto + "\nNuevo saldo: $" + usuarioActivo.saldo);
 }
-```
