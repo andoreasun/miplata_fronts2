@@ -812,6 +812,71 @@
     <div class="login-hint">
       Demo: usuario <code>maria</code> · clave <code>1234</code>
     </div>
+    <div style="margin-top:16px;text-align:center;font-size:13px;color:var(--tinta-3)">
+      ¿No tienes cuenta?
+      <button id="btnIrRegistro" style="background:none;border:0;color:var(--rosa-700);font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;padding:0">
+        Crear cuenta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== REGISTRO ============== -->
+<div id="registro" class="login-screen hidden">
+  <div class="login-card" style="max-width:480px">
+    <div class="logo">
+      <div class="logo-mark">M</div>
+      <div style="text-align:center">
+        <small>Banca Digital</small>
+        <div>Mi Plata</div>
+      </div>
+    </div>
+    <h1>Crear cuenta</h1>
+    <p class="sub">Completa tus datos para empezar</p>
+
+    <form id="formRegistro" autocomplete="off">
+      <div class="field-row">
+        <div class="field">
+          <label>Nombre completo</label>
+          <input type="text" id="regNombre" placeholder="Ana García" required />
+        </div>
+        <div class="field">
+          <label>Identificación (CC)</label>
+          <input type="text" id="regId" placeholder="1.000.000" required />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Celular</label>
+          <input type="tel" id="regCel" placeholder="3001234567" required />
+        </div>
+        <div class="field">
+          <label>Usuario</label>
+          <input type="text" id="regUser" placeholder="anagarcia" required />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="regPass" placeholder="••••••••" required />
+        </div>
+        <div class="field">
+          <label>Confirmar contraseña</label>
+          <input type="password" id="regPassConf" placeholder="••••••••" required />
+        </div>
+      </div>
+      <div id="regError" class="intentos" style="background:var(--rojo-bg);color:var(--rojo)"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px">
+        Registrarse
+      </button>
+    </form>
+
+    <div style="margin-top:16px;text-align:center;font-size:13px;color:var(--tinta-3)">
+      ¿Ya tienes cuenta?
+      <button id="btnIrLogin" style="background:none;border:0;color:var(--rosa-700);font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;padding:0">
+        Iniciar sesión
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1287,44 +1352,105 @@ function toast(titulo, msg, tipo='success') {
   setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(), 250); }, 3500);
 }
 
-/* ======== Login ======== */
-$('#formLogin').addEventListener('submit', (e) => {
+/* ======== Registro de usuarios ======== */
+const usuarios = [cliente]; // lista de todos los clientes registrados
+
+function entrarAlApp(c) {
+  cliente_activo = c;
+  cuentaActiva = c.cuentas[0];
+  perfilInicializado = false;
+  $('#login').classList.add('hidden');
+  $('#registro').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  inicializarPanel();
+  if (!perfilInicializado) { inicializarPerfil(); perfilInicializado = true; }
+  toast('¡Hola, ' + c.nombre.split(' ')[0] + '!', 'Sesión iniciada correctamente.', 'success');
+}
+
+$('#btnIrRegistro').addEventListener('click', () => {
+  $('#login').classList.add('hidden');
+  $('#registro').classList.remove('hidden');
+});
+$('#btnIrLogin').addEventListener('click', () => {
+  $('#registro').classList.add('hidden');
+  $('#login').classList.remove('hidden');
+  $('#regError').classList.remove('show');
+});
+
+$('#formRegistro').addEventListener('submit', function(e) {
   e.preventDefault();
-  const u = $('#loginUser').value.trim();
-  const p = $('#loginPass').value;
-  if (cliente.bloqueado) return toast('Cuenta bloqueada', 'Has superado los intentos.', 'error');
-  if (u === cliente.usuario && cliente.verificarPassword(p)) {
-    cliente.intentosFallidos = 0; intentosLogin = 0;
-    $('#login').classList.add('hidden');
-    $('#app').classList.remove('hidden');
-    inicializarPanel();
-    if (!perfilInicializado) { inicializarPerfil(); perfilInicializado = true; }
-    toast(`¡Hola, ${cliente.nombre.split(' ')[0]}!`, 'Sesión iniciada correctamente.', 'success');
+  var nombre   = $('#regNombre').value.trim();
+  var id       = $('#regId').value.trim();
+  var cel      = $('#regCel').value.trim();
+  var user     = $('#regUser').value.trim().toLowerCase();
+  var pass     = $('#regPass').value;
+  var passConf = $('#regPassConf').value;
+  var errEl    = $('#regError');
+
+  function mostrarError(msg) {
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+  }
+
+  if (!nombre || !id || !cel || !user || !pass) return mostrarError('Todos los campos son obligatorios.');
+  if (pass.length < 4) return mostrarError('La contraseña debe tener mínimo 4 caracteres.');
+  if (pass !== passConf) return mostrarError('Las contraseñas no coinciden.');
+  if (usuarios.find(function(u) { return u.usuario === user; })) return mostrarError('El usuario "' + user + '" ya está registrado.');
+
+  var nuevo = new Cliente({ identificacion: id, nombre: nombre, celular: cel, usuario: user, password: pass });
+  var numId = Date.now() % 100000;
+  nuevo.agregarCuenta(new CuentaAhorros('AH-' + numId + '-0001', nombre, 0));
+  nuevo.agregarCuenta(new CuentaCorriente('CC-' + numId + '-0002', nombre, 0));
+  usuarios.push(nuevo);
+
+  errEl.classList.remove('show');
+  $('#formRegistro').reset();
+  entrarAlApp(nuevo);
+});
+
+/* ======== Login ======== */
+var cliente_activo = cliente;
+
+$('#formLogin').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var u = $('#loginUser').value.trim();
+  var p = $('#loginPass').value;
+  var encontrado = usuarios.find(function(c) { return c.usuario === u; });
+  if (!encontrado) {
+    intentosLogin++;
+    $('#intentos').classList.add('show');
+    $('#intentosNum').textContent = intentosLogin;
+    return toast('Usuario no encontrado', 'Verifica el usuario e intenta de nuevo.', 'error');
+  }
+  if (encontrado.bloqueado) return toast('Cuenta bloqueada', 'Has superado los intentos.', 'error');
+  if (encontrado.verificarPassword(p)) {
+    encontrado.intentosFallidos = 0; intentosLogin = 0;
+    entrarAlApp(encontrado);
   } else {
     intentosLogin++;
-    cliente.intentosFallidos = intentosLogin;
+    encontrado.intentosFallidos = intentosLogin;
     $('#intentos').classList.add('show');
     $('#intentosNum').textContent = intentosLogin;
     if (intentosLogin >= 3) {
-      cliente.bloqueado = true;
+      encontrado.bloqueado = true;
       $('#intentos').innerHTML = '🔒 Cuenta bloqueada por 3 intentos fallidos.';
       toast('Cuenta bloqueada', 'Has superado los 3 intentos.', 'error');
     } else {
-      toast('Credenciales incorrectas', `Intento ${intentosLogin} de 3.`, 'error');
+      toast('Credenciales incorrectas', 'Intento ' + intentosLogin + ' de 3.', 'error');
     }
   }
 });
 
 /* ======== Render principal ======== */
 function inicializarPanel() {
-  $('#userNombre').textContent = cliente.nombre;
-  $('#userDoc').textContent = `CC ${cliente.identificacion}`;
+  $('#userNombre').textContent = cliente_activo.nombre;
+  $('#userDoc').textContent = 'CC ' + cliente_activo.identificacion;
   const avatarEl = $('#avatarSide');
-  if (cliente.fotoUrl) {
-    avatarEl.innerHTML = `<img class="avatar-img" src="${cliente.fotoUrl}" alt="Foto" />`;
+  if (cliente_activo.fotoUrl) {
+    avatarEl.innerHTML = `<img class="avatar-img" src="${cliente_activo.fotoUrl}" alt="Foto" />`;
     avatarEl.style.padding = '0';
   } else {
-    avatarEl.textContent = iniciales(cliente.nombre);
+    avatarEl.textContent = iniciales(cliente_activo.nombre);
     avatarEl.style.padding = '';
   }
   navTo('dashboard');
@@ -1337,7 +1463,7 @@ function inicializarPanel() {
 function renderTabs() {
   const tabs = $('#cuentaTabs');
   tabs.innerHTML = '';
-  cliente.cuentas.forEach((c) => {
+  cliente_activo.cuentas.forEach((c) => {
     const b = document.createElement('button');
     b.className = 'saldo-tab' + (c === cuentaActiva ? ' active' : '');
     b.textContent = c.tipo;
@@ -1361,7 +1487,7 @@ function renderSaldo() {
   $('#cardNumber').innerHTML = saldoVisible
     ? `<span>••••</span><span>••••</span><span>••••</span><span>${last4}</span>`
     : `<span>••••</span><span>••••</span><span>••••</span><span>••••</span>`;
-  $('#cardTitular').textContent = cliente.nombre;
+  $('#cardTitular').textContent = cliente_activo.nombre;
   $('#cardExpira').textContent = ({ Ahorros:'12/28', Corriente:'06/29', Tarjeta:'09/27' })[c.tipo] || '12/28';
 }
 
@@ -1622,7 +1748,7 @@ function accionTransferir() {
     body: `<div class="info-box warn">⚠ No se permite transferir desde tarjeta de crédito.</div>`,
     footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>`
   });
-  const propias = cliente.cuentas.filter(c => c !== cuentaActiva && !(c instanceof TarjetaCredito));
+  const propias = cliente_activo.cuentas.filter(c => c !== cuentaActiva && !(c instanceof TarjetaCredito));
   abrirModal({ titulo: 'Transferir', sub: `Desde ${cuentaActiva.tipo} · ${cuentaActiva.numero}`,
     body: `
       <div class="field"><label>Cuenta destino</label>
@@ -1649,7 +1775,7 @@ function accionTransferir() {
       const concepto = $('#inpTransConcepto').value.trim() || 'Transferencia entre cuentas';
       if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
       const [scope, num] = sel.split(':');
-      const pool = scope === 'propia' ? cliente.cuentas : otroCliente.cuentas;
+      const pool = scope === 'propia' ? cliente_activo.cuentas : otroCliente.cuentas;
       const destino = pool.find(c => c.numero === num);
       if (!destino) throw new Error('Cuenta destino no encontrada');
       if (destino.tipo === cuentaActiva.tipo && scope === 'propia') throw new Error('No puedes transferir al mismo producto del mismo usuario');
@@ -1897,7 +2023,7 @@ function buildReciboHTML(m) {
     ['Fecha y hora', fmtFechaLarga(m.fecha)],
     ['Tipo', tipo],
     ['Cuenta origen', `${c.tipo} · ${c.numero}`],
-    ['Titular', cliente.nombre],
+    ['Titular', cliente_activo.nombre],
   ];
   if (m.descripcion) filas.push(['Concepto', m.descripcion]);
   if (meta.destino) filas.push(['Destino', `${meta.destinoTipo || ''} · ${meta.destino}`]);
@@ -1997,10 +2123,10 @@ function descargarExtractoCompleto() {
       .in { color: #2bb07a; font-weight: 700; }
       .foot { margin-top: 20px; text-align: center; font-size: 11px; color: #8c7884; }
     </style></head><body>
-    <div class="head"><h1>Extracto · Mi Plata</h1><div class="sub">${c.tipo} · ${c.numero} · ${cliente.nombre}</div></div>
+    <div class="head"><h1>Extracto · Mi Plata</h1><div class="sub">${c.tipo} · ${c.numero} · ${cliente_activo.nombre}</div></div>
     <div class="meta">
-      <div><b>Titular</b>${cliente.nombre}</div>
-      <div><b>Identificación</b>CC ${cliente.identificacion}</div>
+      <div><b>Titular</b>${cliente_activo.nombre}</div>
+      <div><b>Identificación</b>CC ${cliente_activo.identificacion}</div>
       <div><b>Cuenta</b>${c.numero}</div>
       <div><b>Tipo</b>${c.tipo}</div>
       <div><b>Saldo actual</b>${fmt(c.saldo)}</div>
@@ -2032,19 +2158,19 @@ function descargarExtractoCompleto() {
 
 /* ---------- Perfil (vista completa) ---------- */
 function accionPerfil() {
-  $('#pfNombre').value = cliente.nombre;
-  $('#pfId').value = cliente.identificacion;
-  $('#pfCel').value = cliente.celular;
-  $('#pfMail').value = cliente.email || '';
-  $('#pfUser').value = cliente.usuario;
-  $('#pfDir').value = cliente.direccion || '';
-  $('#perfilNombreCard').textContent = cliente.nombre;
-  $('#perfilDocCard').textContent = `CC ${cliente.identificacion}`;
+  $('#pfNombre').value = cliente_activo.nombre;
+  $('#pfId').value = cliente_activo.identificacion;
+  $('#pfCel').value = cliente_activo.celular;
+  $('#pfMail').value = cliente_activo.email || '';
+  $('#pfUser').value = cliente_activo.usuario;
+  $('#pfDir').value = cliente_activo.direccion || '';
+  $('#perfilNombreCard').textContent = cliente_activo.nombre;
+  $('#perfilDocCard').textContent = `CC ${cliente_activo.identificacion}`;
   const wrap = $('#perfilPhotoWrap');
-  if (cliente.fotoUrl) {
-    wrap.innerHTML = `<img src="${cliente.fotoUrl}" alt="Foto"><div class="overlay">Cambiar foto</div>`;
+  if (cliente_activo.fotoUrl) {
+    wrap.innerHTML = `<img src="${cliente_activo.fotoUrl}" alt="Foto"><div class="overlay">Cambiar foto</div>`;
   } else {
-    wrap.innerHTML = `<span id="perfilPhotoIniciales">${iniciales(cliente.nombre)}</span><div class="overlay">Cambiar foto</div>`;
+    wrap.innerHTML = `<span id="perfilPhotoIniciales">${iniciales(cliente_activo.nombre)}</span><div class="overlay">Cambiar foto</div>`;
   }
   navTo('perfil');
 }
@@ -2061,10 +2187,10 @@ function inicializarPerfil() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      cliente.fotoUrl = ev.target.result;
-      $('#perfilPhotoWrap').innerHTML = `<img src="${cliente.fotoUrl}" alt="Foto"><div class="overlay">Cambiar foto</div>`;
+      cliente_activo.fotoUrl = ev.target.result;
+      $('#perfilPhotoWrap').innerHTML = `<img src="${cliente_activo.fotoUrl}" alt="Foto"><div class="overlay">Cambiar foto</div>`;
       const avatarEl = $('#avatarSide');
-      avatarEl.innerHTML = `<img class="avatar-img" src="${cliente.fotoUrl}" alt="Foto" />`;
+      avatarEl.innerHTML = `<img class="avatar-img" src="${cliente_activo.fotoUrl}" alt="Foto" />`;
       avatarEl.style.padding = '0';
       toast('Foto actualizada', 'Tu foto de perfil se actualizó', 'success');
     };
@@ -2072,11 +2198,11 @@ function inicializarPerfil() {
   });
 
   $('#btnQuitarFoto').addEventListener('click', () => {
-    cliente.fotoUrl = null;
+    cliente_activo.fotoUrl = null;
     photoInput.value = '';
-    $('#perfilPhotoWrap').innerHTML = `<span id="perfilPhotoIniciales">${iniciales(cliente.nombre)}</span><div class="overlay">Cambiar foto</div>`;
+    $('#perfilPhotoWrap').innerHTML = `<span id="perfilPhotoIniciales">${iniciales(cliente_activo.nombre)}</span><div class="overlay">Cambiar foto</div>`;
     const avatarEl = $('#avatarSide');
-    avatarEl.textContent = iniciales(cliente.nombre);
+    avatarEl.textContent = iniciales(cliente_activo.nombre);
     avatarEl.style.padding = '';
     toast('Foto eliminada', '', 'success');
   });
@@ -2084,27 +2210,27 @@ function inicializarPerfil() {
   $('#btnGuardarPerfil').addEventListener('click', () => {
     const nombre = $('#pfNombre').value.trim();
     if (!nombre) return toast('Nombre requerido', 'El nombre no puede estar vacío', 'error');
-    cliente.nombre = nombre;
-    cliente.identificacion = $('#pfId').value.trim();
-    cliente.celular = $('#pfCel').value.trim();
-    cliente.email = $('#pfMail').value.trim();
-    cliente.usuario = $('#pfUser').value.trim();
-    cliente.direccion = $('#pfDir').value.trim();
-    $('#perfilNombreCard').textContent = cliente.nombre;
-    $('#perfilDocCard').textContent = `CC ${cliente.identificacion}`;
+    cliente_activo.nombre = nombre;
+    cliente_activo.identificacion = $('#pfId').value.trim();
+    cliente_activo.celular = $('#pfCel').value.trim();
+    cliente_activo.email = $('#pfMail').value.trim();
+    cliente_activo.usuario = $('#pfUser').value.trim();
+    cliente_activo.direccion = $('#pfDir').value.trim();
+    $('#perfilNombreCard').textContent = cliente_activo.nombre;
+    $('#perfilDocCard').textContent = `CC ${cliente_activo.identificacion}`;
     const inics = $('#perfilPhotoIniciales');
-    if (inics) inics.textContent = iniciales(cliente.nombre);
+    if (inics) inics.textContent = iniciales(cliente_activo.nombre);
     inicializarPanel();
     toast('Perfil actualizado', 'Tus cambios se guardaron correctamente', 'success');
   });
 
   $('#btnRevertirPerfil').addEventListener('click', () => {
-    $('#pfNombre').value = cliente.nombre;
-    $('#pfId').value = cliente.identificacion;
-    $('#pfCel').value = cliente.celular;
-    $('#pfMail').value = cliente.email || '';
-    $('#pfUser').value = cliente.usuario;
-    $('#pfDir').value = cliente.direccion || '';
+    $('#pfNombre').value = cliente_activo.nombre;
+    $('#pfId').value = cliente_activo.identificacion;
+    $('#pfCel').value = cliente_activo.celular;
+    $('#pfMail').value = cliente_activo.email || '';
+    $('#pfUser').value = cliente_activo.usuario;
+    $('#pfDir').value = cliente_activo.direccion || '';
     toast('Cambios descartados', '', 'warn');
   });
 
@@ -2112,10 +2238,10 @@ function inicializarPerfil() {
     const actual = $('#pfPassActual').value;
     const nueva = $('#pfPassNueva').value;
     const confirma = $('#pfPassConfirma').value;
-    if (!cliente.verificarPassword(actual)) return toast('Clave incorrecta', 'La clave actual no es correcta', 'error');
+    if (!cliente_activo.verificarPassword(actual)) return toast('Clave incorrecta', 'La clave actual no es correcta', 'error');
     if (!nueva || nueva.length < 4) return toast('Clave inválida', 'Mínimo 4 caracteres', 'error');
     if (nueva !== confirma) return toast('No coinciden', 'La confirmación no coincide', 'error');
-    cliente.password = nueva;
+    cliente_activo.password = nueva;
     $('#pfPassActual').value = '';
     $('#pfPassNueva').value = '';
     $('#pfPassConfirma').value = '';
@@ -2127,7 +2253,7 @@ function inicializarPerfil() {
 function accionCambiarPass() {
   abrirModal({ titulo: 'Cambiar contraseña', sub: 'Por seguridad, confirma con tu clave actual',
     body: `
-      <div class="field"><label>Usuario</label><input id="cpUser" value="${cliente.usuario}" readonly style="background:var(--rosa-100);color:var(--tinta-2)" /></div>
+      <div class="field"><label>Usuario</label><input id="cpUser" value="${cliente_activo.usuario}" readonly style="background:var(--rosa-100);color:var(--tinta-2)" /></div>
       <div class="field"><label>Clave actual</label><input type="password" id="cpActual" /></div>
       <div class="field"><label>Nueva clave</label><input type="password" id="cpNueva" /></div>
       <div class="field"><label>Confirmar nueva clave</label><input type="password" id="cpConfirma" /></div>`,
@@ -2136,10 +2262,10 @@ function accionCambiarPass() {
   });
   $('#btnGuardarPass').addEventListener('click', () => {
     const a = $('#cpActual').value, n = $('#cpNueva').value, c = $('#cpConfirma').value;
-    if (!cliente.verificarPassword(a)) return toast('Clave incorrecta', 'No coincide', 'error');
+    if (!cliente_activo.verificarPassword(a)) return toast('Clave incorrecta', 'No coincide', 'error');
     if (!n || n.length < 4) return toast('Clave inválida', 'Mínimo 4 caracteres', 'error');
     if (n !== c) return toast('No coincide', 'La confirmación no coincide', 'error');
-    cliente.password = n; cerrarModal();
+    cliente_activo.password = n; cerrarModal();
     toast('Contraseña actualizada', 'Recuerda usarla', 'success');
   });
 }
@@ -2156,7 +2282,7 @@ function cerrarSesion() {
     $('#app').classList.add('hidden');
     $('#login').classList.remove('hidden');
     $('#loginPass').value = '';
-    intentosLogin = 0; cliente.intentosFallidos = 0;
+    intentosLogin = 0; cliente_activo.intentosFallidos = 0;
     perfilInicializado = false;
     $('#intentos').classList.remove('show');
     toast('Sesión cerrada', '¡Hasta pronto!', 'success');
