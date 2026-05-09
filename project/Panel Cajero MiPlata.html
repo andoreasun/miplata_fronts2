@@ -1262,6 +1262,7 @@ otroCliente.agregarCuenta(otroAhorros);
 let cuentaActiva = ahorros;
 let saldoVisible = true;
 let intentosLogin = 0;
+let perfilInicializado = false;
 
 /* ======== Helpers ======== */
 const $ = (s, p=document) => p.querySelector(s);
@@ -1297,6 +1298,7 @@ $('#formLogin').addEventListener('submit', (e) => {
     $('#login').classList.add('hidden');
     $('#app').classList.remove('hidden');
     inicializarPanel();
+    if (!perfilInicializado) { inicializarPerfil(); perfilInicializado = true; }
     toast(`¡Hola, ${cliente.nombre.split(' ')[0]}!`, 'Sesión iniciada correctamente.', 'success');
   } else {
     intentosLogin++;
@@ -1317,7 +1319,15 @@ $('#formLogin').addEventListener('submit', (e) => {
 function inicializarPanel() {
   $('#userNombre').textContent = cliente.nombre;
   $('#userDoc').textContent = `CC ${cliente.identificacion}`;
-  $('#avatarSide').textContent = iniciales(cliente.nombre);
+  const avatarEl = $('#avatarSide');
+  if (cliente.fotoUrl) {
+    avatarEl.innerHTML = `<img class="avatar-img" src="${cliente.fotoUrl}" alt="Foto" />`;
+    avatarEl.style.padding = '0';
+  } else {
+    avatarEl.textContent = iniciales(cliente.nombre);
+    avatarEl.style.padding = '';
+  }
+  navTo('dashboard');
   renderTabs();
   renderSaldo();
   renderMovimientos();
@@ -1426,16 +1436,43 @@ $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') cerr
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 window.cerrarModal = cerrarModal;
 
+/* ======== Navegación de vistas ======== */
+function navTo(vista) {
+  const views = { dashboard: '#viewDashboard', perfil: '#viewPerfil' };
+  Object.values(views).forEach(v => $(v).classList.add('hidden'));
+  $(views[vista] || '#viewDashboard').classList.remove('hidden');
+  $$('.side-btn').forEach(b => {
+    const a = b.dataset.action;
+    b.classList.toggle('active',
+      (vista === 'dashboard' && (a === 'inicio')) ||
+      (vista === 'perfil' && a === 'perfil')
+    );
+  });
+  const titles = {
+    dashboard: ['Inicio', 'Resumen de tus cuentas'],
+    perfil: ['Mi Perfil', 'Datos y configuración'],
+  };
+  const [t, s] = titles[vista] || titles.dashboard;
+  const h1 = $('#pageTitle');
+  h1.childNodes[0].textContent = t;
+  $('#pageSub').textContent = s;
+}
+
+function accionInicio() {
+  navTo('dashboard');
+  renderSaldo(); renderMovimientos(); renderStats();
+}
+
 /* ======== Acciones ======== */
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const a = btn.dataset.action;
   ({
-    consultar: accionConsultar, consignar: accionConsignar, retirar: accionRetirar,
-    transferir: accionTransferir, movimientos: accionMovimientos, perfil: accionPerfil,
-    cambiarPass: accionCambiarPass, servicios: accionServicios, recargas: accionRecargas,
-    comprarTC: accionComprarTC, extractos: accionExtractos,
+    inicio: accionInicio, consultar: accionConsultar, consignar: accionConsignar,
+    retirar: accionRetirar, transferir: accionTransferir, movimientos: accionMovimientos,
+    perfil: accionPerfil, cambiarPass: accionCambiarPass, servicios: accionServicios,
+    recargas: accionRecargas, comprarTC: accionComprarTC, extractos: accionExtractos,
   })[a]?.();
 });
 $('#verTodos').addEventListener('click', accionMovimientos);
@@ -1480,22 +1517,71 @@ function accionConsignar() {
   });
   abrirModal({ titulo: 'Consignar Dinero', sub: `${cuentaActiva.tipo} · ${cuentaActiva.numero}`,
     body: `
-      <div class="field"><label>Monto a consignar</label>
-        <input type="number" id="inpMonto" placeholder="0" min="1" step="1000" />
-        <div class="field-hint">Debe ser un valor positivo.</div></div>
-      <div class="field"><label>Concepto (opcional)</label>
-        <input type="text" id="inpConcepto" placeholder="Ej. Ahorro mensual" /></div>`,
+      <div class="seg" id="consigSeg">
+        <button class="active" data-cs="propia">A mi cuenta</button>
+        <button data-cs="numero">Por número de cuenta</button>
+      </div>
+      <div id="consigPropia">
+        <div class="field"><label>Monto a consignar</label>
+          <input type="number" id="inpMonto" placeholder="0" min="1" step="1000" />
+          <div class="field-hint">Cuenta activa: <b>${cuentaActiva.tipo} · ${cuentaActiva.numero}</b></div></div>
+        <div class="field"><label>Concepto (opcional)</label>
+          <input type="text" id="inpConcepto" placeholder="Ej. Ahorro mensual" /></div>
+      </div>
+      <div id="consigNumero" class="hidden">
+        <div class="field"><label>Número de cuenta destino</label>
+          <input type="text" id="inpNumCuenta" placeholder="Ej. AH-7849-2210 o CC-3201-7745" />
+          <div class="field-hint">Ingresa el número exacto de la cuenta a consignar.</div></div>
+        <div class="field"><label>Monto a consignar</label>
+          <input type="number" id="inpMontoNum" placeholder="0" min="1" step="1000" /></div>
+        <div class="field"><label>Concepto (opcional)</label>
+          <input type="text" id="inpConceptoNum" placeholder="Ej. Pago a tercero" /></div>
+      </div>`,
     footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
              <button class="btn btn-primary" id="btnConfConsig">Consignar</button>`
   });
+  let modo = 'propia';
+  $$('#consigSeg button').forEach(b => b.addEventListener('click', () => {
+    $$('#consigSeg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    modo = b.dataset.cs;
+    $('#consigPropia').classList.toggle('hidden', modo !== 'propia');
+    $('#consigNumero').classList.toggle('hidden', modo !== 'numero');
+  }));
   $('#btnConfConsig').addEventListener('click', () => {
-    const monto = parseFloat($('#inpMonto').value);
-    const concepto = $('#inpConcepto').value.trim();
     try {
-      const m = cuentaActiva.consignar(monto, concepto || 'Consignación en efectivo');
-      cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
-      toast('Consignación exitosa', `${fmt(monto)} · Saldo: ${fmt(cuentaActiva.saldo)}`, 'success');
-      setTimeout(() => abrirRecibo(m), 400);
+      if (modo === 'propia') {
+        const monto = parseFloat($('#inpMonto').value);
+        const concepto = $('#inpConcepto').value.trim();
+        const m = cuentaActiva.consignar(monto, concepto || 'Consignación en efectivo');
+        cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
+        toast('Consignación exitosa', `${fmt(monto)} · Saldo: ${fmt(cuentaActiva.saldo)}`, 'success');
+        setTimeout(() => abrirRecibo(m), 400);
+      } else {
+        const numCuenta = $('#inpNumCuenta').value.trim();
+        const monto = parseFloat($('#inpMontoNum').value);
+        const concepto = $('#inpConceptoNum').value.trim();
+        if (!numCuenta) throw new Error('Ingresa el número de cuenta destino');
+        if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+        const allCuentas = [...cliente.cuentas, ...otroCliente.cuentas];
+        const destino = allCuentas.find(c => c.numero === numCuenta);
+        if (!destino) throw new Error('Cuenta destino no encontrada. Verifica el número.');
+        if (destino === cuentaActiva) throw new Error('No puedes consignar a la misma cuenta origen.');
+        const limiteOrigen = (cuentaActiva instanceof CuentaCorriente) ? cuentaActiva.limiteRetiro : cuentaActiva.saldo;
+        if (monto > limiteOrigen) throw new Error('Saldo insuficiente para esta operación.');
+        cuentaActiva.saldo -= monto;
+        const m = new Movimiento('transferencia', monto,
+          concepto || `Consignación a ${numCuenta}`,
+          { destino: numCuenta, destinoTitular: destino.titular, destinoTipo: destino.tipo });
+        cuentaActiva.registrarMovimiento(m);
+        destino.saldo += monto;
+        destino.registrarMovimiento(new Movimiento('consignacion', monto,
+          concepto || `Recibida de ${cuentaActiva.titular}`,
+          { origen: cuentaActiva.numero }));
+        cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
+        toast('Consignación exitosa', `${fmt(monto)} → ${destino.titular} (${numCuenta})`, 'success');
+        setTimeout(() => abrirRecibo(m), 400);
+      }
     } catch (err) { toast('No se pudo consignar', err.message, 'error'); }
   });
 }
@@ -1944,28 +2030,97 @@ function descargarExtractoCompleto() {
   toast('Extracto descargado', 'Lo puedes abrir e imprimir como PDF', 'success');
 }
 
-/* ---------- Perfil ---------- */
+/* ---------- Perfil (vista completa) ---------- */
 function accionPerfil() {
-  abrirModal({ titulo: 'Mi Perfil', sub: 'Edita tus datos personales',
-    body: `
-      <div class="field"><label>Nombre completo</label><input id="pfNombre" value="${cliente.nombre}" /></div>
-      <div class="field"><label>Identificación</label><input id="pfId" value="${cliente.identificacion}" /></div>
-      <div class="field"><label>Celular</label><input id="pfCel" value="${cliente.celular}" /></div>
-      <div class="field"><label>Usuario</label><input id="pfUser" value="${cliente.usuario}" /></div>
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--linea)">
-        <button class="btn btn-ghost" id="btnAbrirCambioPass" style="width:100%;justify-content:center">🔒 Cambiar contraseña</button></div>`,
-    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
-             <button class="btn btn-primary" id="btnGuardarPerfil">Guardar cambios</button>`
+  $('#pfNombre').value = cliente.nombre;
+  $('#pfId').value = cliente.identificacion;
+  $('#pfCel').value = cliente.celular;
+  $('#pfMail').value = cliente.email || '';
+  $('#pfUser').value = cliente.usuario;
+  $('#pfDir').value = cliente.direccion || '';
+  $('#perfilNombreCard').textContent = cliente.nombre;
+  $('#perfilDocCard').textContent = `CC ${cliente.identificacion}`;
+  const wrap = $('#perfilPhotoWrap');
+  if (cliente.fotoUrl) {
+    wrap.innerHTML = `<img src="${cliente.fotoUrl}" alt="Foto"><div class="overlay">Cambiar foto</div>`;
+  } else {
+    wrap.innerHTML = `<span id="perfilPhotoIniciales">${iniciales(cliente.nombre)}</span><div class="overlay">Cambiar foto</div>`;
+  }
+  navTo('perfil');
+}
+
+/* ---------- Inicializar listeners del perfil (una sola vez) ---------- */
+function inicializarPerfil() {
+  const photoInput = $('#perfilPhotoInput');
+
+  $('#perfilPhotoWrap').addEventListener('click', () => photoInput.click());
+  $('#btnSubirFoto').addEventListener('click', () => photoInput.click());
+
+  photoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      cliente.fotoUrl = ev.target.result;
+      $('#perfilPhotoWrap').innerHTML = `<img src="${cliente.fotoUrl}" alt="Foto"><div class="overlay">Cambiar foto</div>`;
+      const avatarEl = $('#avatarSide');
+      avatarEl.innerHTML = `<img class="avatar-img" src="${cliente.fotoUrl}" alt="Foto" />`;
+      avatarEl.style.padding = '0';
+      toast('Foto actualizada', 'Tu foto de perfil se actualizó', 'success');
+    };
+    reader.readAsDataURL(file);
   });
+
+  $('#btnQuitarFoto').addEventListener('click', () => {
+    cliente.fotoUrl = null;
+    photoInput.value = '';
+    $('#perfilPhotoWrap').innerHTML = `<span id="perfilPhotoIniciales">${iniciales(cliente.nombre)}</span><div class="overlay">Cambiar foto</div>`;
+    const avatarEl = $('#avatarSide');
+    avatarEl.textContent = iniciales(cliente.nombre);
+    avatarEl.style.padding = '';
+    toast('Foto eliminada', '', 'success');
+  });
+
   $('#btnGuardarPerfil').addEventListener('click', () => {
-    cliente.nombre = $('#pfNombre').value.trim();
+    const nombre = $('#pfNombre').value.trim();
+    if (!nombre) return toast('Nombre requerido', 'El nombre no puede estar vacío', 'error');
+    cliente.nombre = nombre;
     cliente.identificacion = $('#pfId').value.trim();
     cliente.celular = $('#pfCel').value.trim();
+    cliente.email = $('#pfMail').value.trim();
     cliente.usuario = $('#pfUser').value.trim();
-    inicializarPanel(); cerrarModal();
-    toast('Perfil actualizado', 'Tus cambios se guardaron', 'success');
+    cliente.direccion = $('#pfDir').value.trim();
+    $('#perfilNombreCard').textContent = cliente.nombre;
+    $('#perfilDocCard').textContent = `CC ${cliente.identificacion}`;
+    const inics = $('#perfilPhotoIniciales');
+    if (inics) inics.textContent = iniciales(cliente.nombre);
+    inicializarPanel();
+    toast('Perfil actualizado', 'Tus cambios se guardaron correctamente', 'success');
   });
-  $('#btnAbrirCambioPass').addEventListener('click', () => { cerrarModal(); accionCambiarPass(); });
+
+  $('#btnRevertirPerfil').addEventListener('click', () => {
+    $('#pfNombre').value = cliente.nombre;
+    $('#pfId').value = cliente.identificacion;
+    $('#pfCel').value = cliente.celular;
+    $('#pfMail').value = cliente.email || '';
+    $('#pfUser').value = cliente.usuario;
+    $('#pfDir').value = cliente.direccion || '';
+    toast('Cambios descartados', '', 'warn');
+  });
+
+  $('#btnCambiarPass').addEventListener('click', () => {
+    const actual = $('#pfPassActual').value;
+    const nueva = $('#pfPassNueva').value;
+    const confirma = $('#pfPassConfirma').value;
+    if (!cliente.verificarPassword(actual)) return toast('Clave incorrecta', 'La clave actual no es correcta', 'error');
+    if (!nueva || nueva.length < 4) return toast('Clave inválida', 'Mínimo 4 caracteres', 'error');
+    if (nueva !== confirma) return toast('No coinciden', 'La confirmación no coincide', 'error');
+    cliente.password = nueva;
+    $('#pfPassActual').value = '';
+    $('#pfPassNueva').value = '';
+    $('#pfPassConfirma').value = '';
+    toast('Contraseña actualizada', '¡Recuérdala para la próxima vez!', 'success');
+  });
 }
 
 /* ---------- Cambiar contraseña ---------- */
@@ -2002,6 +2157,7 @@ function cerrarSesion() {
     $('#login').classList.remove('hidden');
     $('#loginPass').value = '';
     intentosLogin = 0; cliente.intentosFallidos = 0;
+    perfilInicializado = false;
     $('#intentos').classList.remove('show');
     toast('Sesión cerrada', '¡Hasta pronto!', 'success');
   });
