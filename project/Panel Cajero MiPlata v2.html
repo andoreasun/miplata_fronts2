@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mi Plata · Panel del Cajero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- Tokens: Rosado Pastel ---------- */
+  :root {
+    --rosa-50:  #FFF6F8;
+    --rosa-100: #FFEAF0;
+    --rosa-200: #FFD6E0;
+    --rosa-300: #FFBCCC;
+    --rosa-400: #FF9FB5;
+    --rosa-500: #F47C9A;
+    --rosa-600: #D9577A;
+    --rosa-700: #B33B5E;
+    --rosa-800: #7A2640;
+
+    --crema:    #FFFBF7;
+    --tinta:    #2D1A24;
+    --tinta-2:  #5A4451;
+    --tinta-3:  #8C7884;
+    --linea:    #F2DDE4;
+
+    --verde:    #2BB07A;
+    --verde-bg: #E6F7EF;
+    --rojo:     #D94A5A;
+    --rojo-bg:  #FCE4E7;
+    --ambar:    #C98A14;
+    --ambar-bg: #FFF3D6;
+
+    --sombra-sm: 0 1px 2px rgba(122, 38, 64, .06), 0 2px 6px rgba(122, 38, 64, .04);
+    --sombra-md: 0 4px 14px rgba(122, 38, 64, .08), 0 12px 28px rgba(122, 38, 64, .06);
+    --sombra-lg: 0 18px 48px rgba(122, 38, 64, .14);
+
+    --r-sm: 10px;
+    --r-md: 16px;
+    --r-lg: 22px;
+    --r-xl: 28px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, var(--rosa-200) 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, var(--rosa-100) 0%, transparent 55%),
+      var(--rosa-50);
+    color: var(--tinta);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, select { font-family: inherit; }
+
+  /* ---------- App shell ---------- */
+  .app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 28px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+    font-weight: 800; font-size: 22px; letter-spacing: -.02em;
+    color: var(--tinta);
+  }
+  .logo-mark {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--rosa-400), var(--rosa-600));
+    display: grid; place-items: center;
+    color: #fff; font-weight: 800; font-size: 18px;
+    box-shadow: var(--sombra-sm);
+  }
+  .logo small { color: var(--rosa-700); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; display: block; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff; border: 1px solid var(--linea);
+    padding: 6px 14px 6px 6px; border-radius: 999px;
+    box-shadow: var(--sombra-sm);
+  }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--rosa-300), var(--rosa-500));
+    color: #fff; display: grid; place-items: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .user-chip .nombre { font-size: 14px; font-weight: 600; }
+  .user-chip .doc { font-size: 11px; color: var(--tinta-3); }
+  .btn-icon {
+    background: #fff; border: 1px solid var(--linea);
+    width: 40px; height: 40px; border-radius: 12px;
+    display: grid; place-items: center;
+    box-shadow: var(--sombra-sm);
+    transition: all .15s ease;
+  }
+  .btn-icon:hover { background: var(--rosa-100); border-color: var(--rosa-300); }
+  .btn-icon svg { width: 18px; height: 18px; stroke: var(--tinta-2); }
+
+  /* ---------- Grid principal ---------- */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+
+  /* ---------- Toolbar de acciones (estilo Bootstrap nav) ---------- */
+  .toolbar {
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: var(--r-md);
+    padding: 8px;
+    box-shadow: var(--sombra-sm);
+    display: flex; flex-wrap: wrap;
+    gap: 4px; align-items: center;
+    margin-bottom: 18px;
+  }
+  .nav-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; border: 0;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    font-size: 14px; font-weight: 600;
+    color: var(--tinta-2);
+    transition: all .15s ease;
+    cursor: pointer;
+  }
+  .nav-btn:hover { background: var(--rosa-100); color: var(--rosa-700); }
+  .nav-btn:active { transform: scale(.97); }
+  .nav-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+  .nav-btn.primary {
+    background: linear-gradient(135deg, var(--rosa-500), var(--rosa-700));
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(217, 87, 122, .25);
+  }
+  .nav-btn.primary:hover { color: #fff; transform: translateY(-1px); }
+
+  .nav-divider {
+    width: 1px; height: 22px; background: var(--linea);
+    margin: 0 4px;
+  }
+  .nav-spacer { flex: 1; }
+
+  /* ---------- Dropdown ---------- */
+  .dropdown { position: relative; }
+  .dropdown-menu {
+    position: absolute; right: 0; top: calc(100% + 6px);
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: var(--r-md);
+    box-shadow: var(--sombra-md);
+    min-width: 240px;
+    padding: 6px;
+    display: none;
+    z-index: 50;
+    animation: pop .18s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .dropdown.open .dropdown-menu { display: block; }
+  .dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent; border: 0;
+    border-radius: var(--r-sm);
+    font-size: 13px; font-weight: 600;
+    color: var(--tinta-2);
+    text-align: left;
+    cursor: pointer;
+    transition: background .12s ease;
+  }
+  .dropdown-item:hover { background: var(--rosa-50); color: var(--rosa-700); }
+  .dropdown-item .icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--rosa-100); color: var(--rosa-700);
+    display: grid; place-items: center; flex-shrink: 0;
+    font-size: 14px;
+  }
+  .dropdown-divider { height: 1px; background: var(--linea); margin: 4px 6px; }
+
+  @media (max-width: 600px) {
+    .nav-btn { padding: 9px 10px; font-size: 13px; }
+    .nav-btn .lbl { display: none; }
+    .nav-btn.primary .lbl { display: inline; }
+    .nav-divider { display: none; }
+  }
+
+  /* ---------- Card de saldo (tarjeta real) ---------- */
+  .saldo-card {
+    background:
+      radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,.22) 0%, transparent 55%),
+      radial-gradient(80% 60% at 0% 100%, rgba(0,0,0,.18) 0%, transparent 55%),
+      linear-gradient(135deg, var(--rosa-400) 0%, var(--rosa-600) 50%, var(--rosa-800) 100%);
+    color: #fff;
+    border-radius: 20px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      var(--sombra-lg),
+      inset 0 1px 0 rgba(255,255,255,.35),
+      inset 0 -1px 0 rgba(0,0,0,.12);
+    aspect-ratio: 1.586 / 1;
+    max-width: 560px;
+    display: flex; flex-direction: column;
+  }
+  .saldo-card::before {
+    content: '';
+    position: absolute; right: -30%; top: -40%;
+    width: 110%; height: 130%;
+    background: radial-gradient(circle, rgba(255,255,255,.14), transparent 60%);
+    pointer-events: none;
+  }
+  .saldo-card::after {
+    /* Líneas decorativas tipo tarjeta */
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(115deg, transparent 40%, rgba(255,255,255,.08) 50%, transparent 60%);
+    pointer-events: none;
+  }
+  .card-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; position: relative; z-index: 3;
+  }
+  .card-brand {
+    text-align: right;
+    font-weight: 800; letter-spacing: -.01em;
+    line-height: 1;
+  }
+  .card-brand .b-name { font-size: 18px; }
+  .card-brand .b-sub { font-size: 9px; opacity: .8; letter-spacing: .2em; text-transform: uppercase; margin-top: 4px; font-weight: 600; }
+
+  .card-chip-row {
+    display: flex; align-items: center; gap: 14px;
+    margin: 18px 0 6px;
+    position: relative; z-index: 3;
+  }
+  .card-chip {
+    width: 44px; height: 34px; border-radius: 7px;
+    background: linear-gradient(135deg, #f5d28b 0%, #c9a24a 50%, #f5d28b 100%);
+    position: relative;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.15), 0 1px 2px rgba(0,0,0,.15);
+  }
+  .card-chip::before, .card-chip::after {
+    content: ''; position: absolute; left: 8px; right: 8px;
+    height: 1px; background: rgba(0,0,0,.25);
+  }
+  .card-chip::before { top: 10px; box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 12px 0 rgba(0,0,0,.25); }
+  .card-chip::after { display: none; }
+  .card-wave {
+    width: 22px; height: 22px;
+    color: rgba(255,255,255,.85);
+  }
+  .card-wave svg { width: 100%; height: 100%; }
+
+  .saldo-tipo-tabs {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,.18);
+    padding: 3px; border-radius: 999px;
+    width: fit-content;
+    backdrop-filter: blur(8px);
+    position: relative; z-index: 3;
+  }
+  .saldo-tab {
+    background: transparent; border: 0; color: rgba(255,255,255,.85);
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    transition: all .2s ease;
+  }
+  .saldo-tab.active { background: #fff; color: var(--rosa-700); box-shadow: 0 4px 10px rgba(0,0,0,.08); }
+  .saldo-tab:hover:not(.active) { color: #fff; }
+
+  .saldo-label { font-size: 11px; opacity: .85; margin: 0 0 4px; position: relative; z-index: 3; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; }
+  .saldo-amount {
+    font-size: 32px; font-weight: 800; letter-spacing: -.02em;
+    position: relative; z-index: 3;
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 4px;
+  }
+  .saldo-amount .currency { font-size: 14px; opacity: .8; font-weight: 600; }
+
+  .card-number {
+    font-family: 'Plus Jakarta Sans', monospace;
+    font-size: 20px; letter-spacing: .14em;
+    font-weight: 700;
+    margin-top: auto;
+    text-shadow: 0 1px 1px rgba(0,0,0,.18);
+    position: relative; z-index: 3;
+    display: flex; gap: 10px;
+  }
+  .card-number span { display: inline-block; }
+
+  .card-bottom {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: 12px; gap: 14px;
+    position: relative; z-index: 3;
+  }
+  .card-meta-label { font-size: 9px; opacity: .75; letter-spacing: .18em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+  .card-meta-val { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .card-network {
+    display: flex; gap: -6px; align-items: center;
+  }
+  .card-network-dot {
+    width: 24px; height: 24px; border-radius: 999px;
+    background: rgba(255,255,255,.85);
+    margin-left: -8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  }
+  .card-network-dot:first-child { margin-left: 0; background: rgba(255,255,255,.6); }
+
+  .toggle-eye {
+    background: rgba(255,255,255,.2); border: 0; width: 30px; height: 30px;
+    border-radius: 999px; color: #fff;
+    display: grid; place-items: center; z-index: 3;
+    transition: all .15s ease;
+    flex-shrink: 0;
+  }
+  .toggle-eye:hover { background: rgba(255,255,255,.32); }
+  .toggle-eye svg { width: 14px; height: 14px; stroke: #fff; }
+
+  @media (max-width: 600px) {
+    .saldo-card { padding: 20px; }
+    .saldo-amount { font-size: 26px; }
+    .card-number { font-size: 16px; }
+  }
+
+  /* ---------- Acciones grid ---------- */
+  .acciones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 20px;
+  }
+  @media (max-width: 600px) { .acciones { grid-template-columns: repeat(2, 1fr); } }
+
+  .accion {
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: var(--r-md);
+    padding: 18px 16px;
+    text-align: left;
+    box-shadow: var(--sombra-sm);
+    transition: all .18s ease;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 110px;
+  }
+  .accion:hover {
+    transform: translateY(-2px);
+    border-color: var(--rosa-300);
+    box-shadow: var(--sombra-md);
+  }
+  .accion:active { transform: translateY(0); }
+  .accion-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--rosa-100);
+    display: grid; place-items: center;
+  }
+  .accion-icon svg { width: 20px; height: 20px; stroke: var(--rosa-700); }
+  .accion-titulo { font-weight: 700; font-size: 15px; color: var(--tinta); }
+  .accion-sub { font-size: 12px; color: var(--tinta-3); }
+
+  /* ---------- Sidebar (movimientos) ---------- */
+  .panel {
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: var(--r-lg);
+    padding: 22px;
+    box-shadow: var(--sombra-sm);
+  }
+  .panel-titulo {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .panel-titulo h3 { margin: 0; font-size: 16px; font-weight: 700; }
+  .panel-titulo a { color: var(--rosa-700); font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; }
+  .panel-titulo a:hover { text-decoration: underline; }
+
+  .movimiento {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--linea);
+  }
+  .movimiento:last-child { border-bottom: 0; }
+  .mov-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .mov-icon.consig { background: var(--verde-bg); color: var(--verde); }
+  .mov-icon.retiro { background: var(--rojo-bg); color: var(--rojo); }
+  .mov-icon.transf { background: var(--rosa-100); color: var(--rosa-700); }
+  .mov-icon svg { width: 16px; height: 16px; stroke: currentColor; }
+  .mov-info { flex: 1; min-width: 0; }
+  .mov-tipo { font-weight: 600; font-size: 14px; }
+  .mov-fecha { font-size: 11px; color: var(--tinta-3); }
+  .mov-valor { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .mov-valor.in { color: var(--verde); }
+  .mov-valor.out { color: var(--rojo); }
+  .mov-empty { text-align: center; color: var(--tinta-3); padding: 30px 0; font-size: 13px; }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(45, 26, 36, .35);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+    animation: fade .2s ease;
+  }
+  .modal-backdrop.show { display: flex; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { transform: scale(.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .modal {
+    background: #fff;
+    border-radius: var(--r-xl);
+    width: 100%; max-width: 460px;
+    box-shadow: var(--sombra-lg);
+    animation: pop .25s cubic-bezier(.2,.9,.3,1.2);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header {
+    padding: 22px 24px 8px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  }
+  .modal-header h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+  .modal-header p { margin: 4px 0 0; color: var(--tinta-3); font-size: 13px; }
+  .modal-close {
+    background: var(--rosa-50); border: 0; width: 32px; height: 32px;
+    border-radius: 999px; cursor: pointer;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--rosa-200); }
+  .modal-body { padding: 18px 24px 24px; }
+  .modal-footer {
+    padding: 0 24px 24px;
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* ---------- Forms ---------- */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--tinta-2); margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--rosa-50);
+    border: 1.5px solid var(--linea);
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    font-size: 15px; color: var(--tinta);
+    transition: all .15s ease;
+  }
+  .field input:focus, .field select:focus {
+    outline: 0;
+    border-color: var(--rosa-400);
+    background: #fff;
+    box-shadow: 0 0 0 4px var(--rosa-100);
+  }
+  .field-hint { font-size: 11px; color: var(--tinta-3); margin-top: 4px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    border: 0; padding: 12px 20px;
+    border-radius: var(--r-sm);
+    font-weight: 700; font-size: 14px;
+    cursor: pointer; transition: all .15s ease;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--rosa-500), var(--rosa-700));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(217, 87, 122, .3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(217, 87, 122, .4); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-ghost {
+    background: var(--rosa-50);
+    color: var(--tinta-2);
+  }
+  .btn-ghost:hover { background: var(--rosa-100); }
+  .btn-danger {
+    background: var(--rojo-bg); color: var(--rojo);
+  }
+  .btn-danger:hover { background: var(--rojo); color: #fff; }
+
+  /* ---------- Toast ---------- */
+  .toast-wrap {
+    position: fixed; top: 20px; right: 20px; z-index: 200;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .toast {
+    background: #fff; border: 1px solid var(--linea);
+    padding: 14px 18px;
+    border-radius: var(--r-md);
+    box-shadow: var(--sombra-md);
+    display: flex; align-items: center; gap: 12px;
+    min-width: 280px; max-width: 380px;
+    animation: slideIn .3s cubic-bezier(.2,.9,.3,1.2);
+    border-left: 4px solid var(--rosa-500);
+  }
+  .toast.success { border-left-color: var(--verde); }
+  .toast.error   { border-left-color: var(--rojo); }
+  .toast.warn    { border-left-color: var(--ambar); }
+  .toast-icon {
+    width: 32px; height: 32px; border-radius: 999px;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .toast.success .toast-icon { background: var(--verde-bg); color: var(--verde); }
+  .toast.error   .toast-icon { background: var(--rojo-bg);  color: var(--rojo); }
+  .toast.warn    .toast-icon { background: var(--ambar-bg); color: var(--ambar); }
+  .toast-icon svg { width: 16px; height: 16px; stroke: currentColor; }
+  .toast-text { flex: 1; }
+  .toast-title { font-weight: 700; font-size: 14px; }
+  .toast-msg { font-size: 12px; color: var(--tinta-3); margin-top: 2px; }
+  @keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .toast.out { animation: slideOut .25s ease forwards; }
+  @keyframes slideOut {
+    to { transform: translateX(20px); opacity: 0; }
+  }
+
+  /* ---------- Login ---------- */
+  .login-screen {
+    min-height: 100vh;
+    display: grid; place-items: center;
+    padding: 24px;
+  }
+  .login-card {
+    background: #fff;
+    border-radius: var(--r-xl);
+    padding: 36px 32px;
+    width: 100%; max-width: 400px;
+    box-shadow: var(--sombra-lg);
+    border: 1px solid var(--linea);
+  }
+  .login-card .logo { margin: 0 auto 18px; justify-content: center; flex-direction: column; align-items: center; }
+  .login-card h1 { margin: 0 0 4px; font-size: 22px; text-align: center; }
+  .login-card .sub { color: var(--tinta-3); font-size: 13px; text-align: center; margin-bottom: 24px; }
+  .intentos {
+    background: var(--ambar-bg); color: var(--ambar);
+    padding: 8px 12px; border-radius: var(--r-sm);
+    font-size: 12px; font-weight: 600;
+    text-align: center; margin-bottom: 14px;
+    display: none;
+  }
+  .intentos.show { display: block; }
+  .login-hint {
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--linea);
+    text-align: center; font-size: 12px; color: var(--tinta-3);
+  }
+  .login-hint code {
+    background: var(--rosa-100); color: var(--rosa-700);
+    padding: 2px 6px; border-radius: 4px; font-size: 11px;
+  }
+
+  .hidden { display: none !important; }
+
+  /* ---------- Tarjeta visual ---------- */
+  .tarjeta-visual {
+    margin-top: 16px;
+    background: linear-gradient(135deg, #fff 0%, #fff5f8 100%);
+    border-radius: var(--r-md);
+    padding: 16px;
+    color: var(--tinta);
+    position: relative; z-index: 2;
+  }
+  .tarjeta-visual .num {
+    font-family: 'Plus Jakarta Sans', monospace;
+    font-size: 16px; letter-spacing: .12em;
+    font-weight: 600;
+  }
+  .tarjeta-visual-row {
+    display: flex; justify-content: space-between;
+    margin-top: 8px; font-size: 11px; color: var(--tinta-3);
+  }
+
+  /* ---------- Chip ---------- */
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--rosa-100); color: var(--rosa-700);
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+  }
+  .chip.warn { background: var(--ambar-bg); color: var(--ambar); }
+
+  /* ---------- Lista de movimientos completa ---------- */
+  .movs-full { max-height: 400px; overflow-y: auto; }
+
+  /* ---------- Footer ---------- */
+  .footer {
+    text-align: center; margin-top: 40px;
+    color: var(--tinta-3); font-size: 12px;
+  }
+  .footer b { color: var(--rosa-700); }
+</style>
+</head>
+<body>
+
+<!-- ============== LOGIN ============== -->
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <div class="logo">
+      <div class="logo-mark">M</div>
+      <div style="text-align:center">
+        <small>Banca Digital</small>
+        <div>Mi Plata</div>
+      </div>
+    </div>
+    <h1>Bienvenido de nuevo</h1>
+    <p class="sub">Ingresa a tu cuenta para continuar</p>
+
+    <div id="intentos" class="intentos">⚠ Intento <span id="intentosNum">1</span> de 3</div>
+
+    <form id="formLogin" autocomplete="off">
+      <div class="field">
+        <label>Usuario</label>
+        <input type="text" id="loginUser" placeholder="ej. maria.lopez" required />
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+        Iniciar sesión
+      </button>
+    </form>
+
+    <div class="login-hint">
+      Demo: usuario <code>maria</code> · clave <code>1234</code>
+    </div>
+  </div>
+</div>
+
+<!-- ============== APP ============== -->
+<div id="app" class="app hidden">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-mark">M</div>
+      <div>
+        <small>Banca Digital</small>
+        <div>Mi Plata</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-chip">
+        <div class="avatar" id="avatar">M</div>
+        <div>
+          <div class="nombre" id="userNombre">María López</div>
+          <div class="doc" id="userDoc">CC 1.234.567</div>
+        </div>
+      </div>
+      <button class="btn-icon" title="Cerrar sesión" id="btnLogout">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar de acciones (Bootstrap-style) -->
+  <div class="toolbar">
+    <button class="nav-btn primary" data-action="consignar">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span class="lbl">Consignar</span>
+    </button>
+    <button class="nav-btn" data-action="retirar">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span class="lbl">Retirar</span>
+    </button>
+    <button class="nav-btn" data-action="transferir">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <span class="lbl">Transferir</span>
+    </button>
+    <button class="nav-btn" data-action="consultar">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span class="lbl">Consultar saldo</span>
+    </button>
+    <button class="nav-btn" data-action="movimientos">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="lbl">Movimientos</span>
+    </button>
+    <button class="nav-btn" data-action="perfil">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="lbl">Perfil</span>
+    </button>
+
+    <div class="nav-spacer"></div>
+
+    <div class="dropdown" id="atajosDropdown">
+      <button class="nav-btn" id="btnAtajos">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="lbl">Atajos rápidos</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="dropdown-menu">
+        <button class="dropdown-item" data-action="consignar">
+          <span class="icon">＋</span>
+          <span>Consignar a Ahorros</span>
+        </button>
+        <button class="dropdown-item" data-action="transferir">
+          <span class="icon">↻</span>
+          <span>Transferir entre cuentas</span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" data-action="cambiarPass">
+          <span class="icon">🔒</span>
+          <span>Cambiar contraseña</span>
+        </button>
+        <button class="dropdown-item" data-action="perfil">
+          <span class="icon">✎</span>
+          <span>Editar perfil</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Columna izquierda: tarjeta -->
+    <div>
+      <!-- Card saldo (estilo tarjeta real) -->
+      <div class="saldo-card">
+        <div class="card-top">
+          <div class="saldo-tipo-tabs" id="cuentaTabs"></div>
+          <div class="card-brand">
+            <div class="b-name">Mi Plata</div>
+            <div class="b-sub">Banca Digital</div>
+          </div>
+        </div>
+
+        <div class="card-chip-row">
+          <div class="card-chip"></div>
+          <div class="card-wave">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8.5 8.5a5 5 0 0 1 0 7"/>
+              <path d="M11.5 5.5a9 9 0 0 1 0 13"/>
+              <path d="M14.5 2.5a13 13 0 0 1 0 19"/>
+            </svg>
+          </div>
+          <button class="toggle-eye" id="toggleEye" title="Mostrar/ocultar saldo" style="margin-left:auto">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeIcon">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="saldo-label" id="saldoLabel">Saldo disponible</div>
+        <div class="saldo-amount">
+          <span class="currency">COP</span>
+          <span id="saldoMonto">$0</span>
+        </div>
+
+        <div class="card-number" id="cardNumber">
+          <span>••••</span><span>••••</span><span>••••</span><span>2210</span>
+        </div>
+
+        <div class="card-bottom">
+          <div>
+            <div class="card-meta-label">Titular</div>
+            <div class="card-meta-val" id="cardTitular">María López</div>
+          </div>
+          <div>
+            <div class="card-meta-label">Válida hasta</div>
+            <div class="card-meta-val" id="cardExpira">12/28</div>
+          </div>
+          <div class="card-network" title="Mi Plata">
+            <div class="card-network-dot"></div>
+            <div class="card-network-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: movimientos recientes -->
+    <div>
+      <div class="panel">
+        <div class="panel-titulo">
+          <h3>Movimientos recientes</h3>
+          <a id="verTodos">Ver todos</a>
+        </div>
+        <div id="listaMovs"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <b>Mi Plata</b> · Sucursal Digital · Proyecto de Aula CESDE
+  </div>
+</div>
+
+<!-- ============== Modal genérico ============== -->
+<div id="modal" class="modal-backdrop">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div>
+        <h2 id="modalTitulo">Título</h2>
+        <p id="modalSub"></p>
+      </div>
+      <button class="modal-close" id="modalClose">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastWrap" class="toast-wrap"></div>
+
+<!-- ============== JavaScript: POO ============== -->
+<script>
+'use strict';
+
+/* =====================================================
+   CLASES (POO con herencia y polimorfismo)
+   ===================================================== */
+
+class Movimiento {
+  constructor(tipo, valor, descripcion = '') {
+    this.fecha = new Date();
+    this.tipo = tipo; // 'consignacion' | 'retiro' | 'transferencia' | 'compra'
+    this.valor = valor;
+    this.descripcion = descripcion;
+  }
+}
+
+// Clase base abstracta
+class Cuenta {
+  #saldo;
+  constructor(numero, titular, saldoInicial = 0) {
+    this.numero = numero;
+    this.titular = titular;
+    this.#saldo = saldoInicial;
+    this.movimientos = []; // List<Movimiento>
+  }
+  get saldo() { return this.#saldo; }
+  set saldo(v) { this.#saldo = v; }
+
+  consignar(monto) {
+    if (!Number.isFinite(monto) || monto <= 0) {
+      throw new Error('El monto debe ser un número positivo mayor a cero');
+    }
+    this.#saldo += monto;
+    this.movimientos.unshift(new Movimiento('consignacion', monto, 'Consignación en efectivo'));
+    return this.#saldo;
+  }
+
+  // Polimorfismo: cada subclase redefine retirar()
+  retirar(monto) {
+    throw new Error('Método retirar() debe implementarse en la subclase');
+  }
+
+  registrarMovimiento(mov) { this.movimientos.unshift(mov); }
+}
+
+class CuentaAhorros extends Cuenta {
+  static TASA_INTERES = 0.015; // 1.5% mensual
+  constructor(numero, titular, saldoInicial = 0) {
+    super(numero, titular, saldoInicial);
+    this.tipo = 'Ahorros';
+  }
+  // Polimorfismo: aplica interés en el momento del retiro
+  retirar(monto) {
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+    if (monto > this.saldo) throw new Error('Saldo insuficiente');
+    const interes = this.saldo * CuentaAhorros.TASA_INTERES;
+    this.saldo = this.saldo - monto + interes;
+    this.registrarMovimiento(new Movimiento('retiro', monto, `Retiro (interés acreditado: $${Math.round(interes).toLocaleString('es-CO')})`));
+    return { nuevoSaldo: this.saldo, interes };
+  }
+}
+
+class CuentaCorriente extends Cuenta {
+  static SOBREGIRO = 0.20; // 20% adicional
+  constructor(numero, titular, saldoInicial = 0) {
+    super(numero, titular, saldoInicial);
+    this.tipo = 'Corriente';
+  }
+  get limiteRetiro() { return this.saldo * (1 + CuentaCorriente.SOBREGIRO); }
+  // Polimorfismo: permite sobregiro del 20%
+  retirar(monto) {
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+    if (monto > this.limiteRetiro) throw new Error(`Excede el límite (incluye 20% de sobregiro: $${Math.round(this.limiteRetiro).toLocaleString('es-CO')})`);
+    this.saldo -= monto;
+    const enSobregiro = this.saldo < 0;
+    this.registrarMovimiento(new Movimiento('retiro', monto, enSobregiro ? 'Retiro con sobregiro' : 'Retiro'));
+    return { nuevoSaldo: this.saldo, sobregiro: enSobregiro };
+  }
+}
+
+class TarjetaCredito extends Cuenta {
+  constructor(numero, titular, cupo = 0) {
+    super(numero, titular, 0);
+    this.tipo = 'Tarjeta';
+    this.cupo = cupo;
+    this.deuda = 0;
+  }
+  static tasa(cuotas) {
+    if (cuotas <= 2) return 0;
+    if (cuotas <= 6) return 0.019;
+    return 0.023;
+  }
+  static cuotaMensual(capital, cuotas) {
+    const tasa = TarjetaCredito.tasa(cuotas);
+    if (tasa === 0) return capital / cuotas;
+    return (capital * tasa) / (1 - Math.pow(1 + tasa, -cuotas));
+  }
+  comprar(monto, cuotas) {
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+    if (cuotas < 1) throw new Error('Número de cuotas inválido');
+    if (this.deuda + monto > this.cupo) throw new Error('Excede el cupo disponible');
+    const cuotaMes = TarjetaCredito.cuotaMensual(monto, cuotas);
+    this.deuda += monto;
+    this.registrarMovimiento(new Movimiento('compra', monto, `Compra a ${cuotas} cuota(s) · $${Math.round(cuotaMes).toLocaleString('es-CO')}/mes`));
+    return { cuotaMensual: cuotaMes, totalDeuda: this.deuda, tasa: TarjetaCredito.tasa(cuotas) };
+  }
+  // Polimorfismo: en TC "retirar" no aplica directamente
+  retirar() { throw new Error('La tarjeta de crédito no permite retiros, solo compras'); }
+  get cupoDisponible() { return this.cupo - this.deuda; }
+}
+
+class Cliente {
+  constructor({ identificacion, nombre, celular, usuario, password }) {
+    this.identificacion = identificacion;
+    this.nombre = nombre;
+    this.celular = celular;
+    this.usuario = usuario;
+    this.password = password;
+    this.cuentas = [];
+    this.intentosFallidos = 0;
+    this.bloqueado = false;
+  }
+  agregarCuenta(c) { this.cuentas.push(c); }
+  verificarPassword(p) { return this.password === p; }
+}
+
+/* =====================================================
+   Datos demo
+   ===================================================== */
+
+const cliente = new Cliente({
+  identificacion: '1.234.567',
+  nombre: 'María López',
+  celular: '+57 300 555 1234',
+  usuario: 'maria',
+  password: '1234',
+});
+const ahorros = new CuentaAhorros('AH-7849-2210', 'María López', 2_450_000);
+const corriente = new CuentaCorriente('CC-3201-7745', 'María López', 850_000);
+const tarjeta = new TarjetaCredito('TC-4521-8899-2210', 'María López', 5_000_000);
+tarjeta.deuda = 1_120_000;
+
+// movimientos demo
+ahorros.movimientos.push(
+  Object.assign(new Movimiento('consignacion', 500_000, 'Pago de nómina'), { fecha: new Date(Date.now() - 86400000 * 2) }),
+  Object.assign(new Movimiento('retiro', 120_000, 'Retiro cajero CC93'), { fecha: new Date(Date.now() - 86400000 * 5) }),
+  Object.assign(new Movimiento('transferencia', 80_000, 'Transferencia a Juan P.'), { fecha: new Date(Date.now() - 86400000 * 7) }),
+);
+corriente.movimientos.push(
+  Object.assign(new Movimiento('consignacion', 250_000, 'Depósito en sucursal'), { fecha: new Date(Date.now() - 86400000 * 1) }),
+);
+
+cliente.agregarCuenta(ahorros);
+cliente.agregarCuenta(corriente);
+cliente.agregarCuenta(tarjeta);
+
+// Cliente externo demo (para transferencias)
+const otroCliente = new Cliente({ identificacion: '7.654.321', nombre: 'Juan Pérez', celular: '+57 311 999 8877', usuario: 'juanp', password: '0000' });
+const otroAhorros = new CuentaAhorros('AH-9988-1100', 'Juan Pérez', 320_000);
+otroCliente.agregarCuenta(otroAhorros);
+
+/* =====================================================
+   Estado UI
+   ===================================================== */
+
+let cuentaActiva = ahorros;
+let saldoVisible = true;
+let intentosLogin = 0;
+
+/* =====================================================
+   Helpers
+   ===================================================== */
+
+const $  = (s, p=document) => p.querySelector(s);
+const $$ = (s, p=document) => [...p.querySelectorAll(s)];
+const fmt = (n) => '$' + Math.round(n).toLocaleString('es-CO');
+const fmtFecha = (d) => d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+const iniciales = (n) => n.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+
+function toast(titulo, msg, tipo='success') {
+  const wrap = $('#toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${tipo}`;
+  const iconoSVG = {
+    success: '<polyline points="20 6 9 17 4 12"/>',
+    error:   '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    warn:    '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  }[tipo] || '';
+  el.innerHTML = `
+    <div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${iconoSVG}</svg></div>
+    <div class="toast-text"><div class="toast-title">${titulo}</div><div class="toast-msg">${msg||''}</div></div>
+  `;
+  wrap.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(), 250); }, 3500);
+}
+
+/* =====================================================
+   Login
+   ===================================================== */
+
+$('#formLogin').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const u = $('#loginUser').value.trim();
+  const p = $('#loginPass').value;
+  if (cliente.bloqueado) { toast('Cuenta bloqueada', 'Has superado el número de intentos permitidos.', 'error'); return; }
+
+  if (u === cliente.usuario && cliente.verificarPassword(p)) {
+    cliente.intentosFallidos = 0;
+    intentosLogin = 0;
+    $('#login').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    inicializarPanel();
+    toast(`¡Hola, ${cliente.nombre.split(' ')[0]}!`, 'Sesión iniciada correctamente.', 'success');
+  } else {
+    intentosLogin++;
+    cliente.intentosFallidos = intentosLogin;
+    $('#intentos').classList.add('show');
+    $('#intentosNum').textContent = intentosLogin;
+    if (intentosLogin >= 3) {
+      cliente.bloqueado = true;
+      $('#intentos').innerHTML = '🔒 Cuenta bloqueada por 3 intentos fallidos. Contacta soporte.';
+      toast('Cuenta bloqueada', 'Has superado los 3 intentos permitidos.', 'error');
+    } else {
+      toast('Credenciales incorrectas', `Intento ${intentosLogin} de 3.`, 'error');
+    }
+  }
+});
+
+/* =====================================================
+   Inicializar Panel
+   ===================================================== */
+
+function inicializarPanel() {
+  $('#userNombre').textContent = cliente.nombre;
+  $('#userDoc').textContent = `CC ${cliente.identificacion}`;
+  $('#avatar').textContent = iniciales(cliente.nombre);
+  renderTabs();
+  renderSaldo();
+  renderMovimientos();
+}
+
+function renderTabs() {
+  const tabs = $('#cuentaTabs');
+  tabs.innerHTML = '';
+  cliente.cuentas.forEach((c) => {
+    const b = document.createElement('button');
+    b.className = 'saldo-tab' + (c === cuentaActiva ? ' active' : '');
+    b.textContent = c.tipo;
+    b.addEventListener('click', () => {
+      cuentaActiva = c;
+      renderTabs();
+      renderSaldo();
+      renderMovimientos();
+    });
+    tabs.appendChild(b);
+  });
+}
+
+function renderSaldo() {
+  const c = cuentaActiva;
+  let label = `Saldo disponible · ${c.tipo}`;
+  let monto = c.saldo;
+  if (c instanceof TarjetaCredito) {
+    label = `Cupo disponible · Tarjeta de Crédito`;
+    monto = c.cupoDisponible;
+  }
+  $('#saldoLabel').textContent = label;
+  $('#saldoMonto').textContent = saldoVisible ? fmt(monto) : '••••••';
+
+  // Número de tarjeta formateado: "•••• •••• •••• XXXX"
+  const last4 = (c.numero.replace(/[^0-9]/g, '').slice(-4) || '0000').padStart(4, '0');
+  $('#cardNumber').innerHTML = saldoVisible
+    ? `<span>••••</span><span>••••</span><span>••••</span><span>${last4}</span>`
+    : `<span>••••</span><span>••••</span><span>••••</span><span>••••</span>`;
+
+  // Titular y fecha de expiración por tipo
+  $('#cardTitular').textContent = cliente.nombre;
+  const expiras = { Ahorros: '12/28', Corriente: '06/29', Tarjeta: '09/27' };
+  $('#cardExpira').textContent = expiras[c.tipo] || '12/28';
+}
+
+function renderMovimientos(limite = 5) {
+  const lista = $('#listaMovs');
+  const movs = cuentaActiva.movimientos.slice(0, limite);
+  if (movs.length === 0) {
+    lista.innerHTML = `<div class="mov-empty">Aún no hay movimientos en esta cuenta.</div>`;
+    return;
+  }
+  lista.innerHTML = movs.map(m => movRow(m)).join('');
+}
+
+function movRow(m) {
+  const cls = m.tipo === 'consignacion' ? 'consig' : (m.tipo === 'retiro' ? 'retiro' : 'transf');
+  const icon = m.tipo === 'consignacion'
+    ? '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'
+    : m.tipo === 'retiro'
+    ? '<line x1="5" y1="12" x2="19" y2="12"/>'
+    : '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>';
+  const tipo = m.tipo === 'consignacion' ? 'Consignación' : m.tipo === 'retiro' ? 'Retiro' : m.tipo === 'transferencia' ? 'Transferencia' : 'Compra';
+  const signo = (m.tipo === 'retiro' || m.tipo === 'transferencia' || m.tipo === 'compra') ? 'out' : 'in';
+  const prefijo = signo === 'out' ? '−' : '+';
+  return `
+    <div class="movimiento">
+      <div class="mov-icon ${cls}">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg>
+      </div>
+      <div class="mov-info">
+        <div class="mov-tipo">${tipo}${m.descripcion ? ` <span style="color:var(--tinta-3);font-weight:500;font-size:12px">· ${m.descripcion}</span>` : ''}</div>
+        <div class="mov-fecha">${fmtFecha(m.fecha)}</div>
+      </div>
+      <div class="mov-valor ${signo}">${prefijo}${fmt(m.valor)}</div>
+    </div>
+  `;
+}
+
+/* =====================================================
+   Modal genérico
+   ===================================================== */
+
+function abrirModal({ titulo, sub = '', body = '', footer = '' }) {
+  $('#modalTitulo').textContent = titulo;
+  $('#modalSub').textContent = sub;
+  $('#modalBody').innerHTML = body;
+  $('#modalFooter').innerHTML = footer;
+  $('#modal').classList.add('show');
+}
+function cerrarModal() { $('#modal').classList.remove('show'); }
+
+$('#modalClose').addEventListener('click', cerrarModal);
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') cerrarModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+
+/* =====================================================
+   Acciones (delegadas)
+   ===================================================== */
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const a = btn.dataset.action;
+  ({
+    consultar:    accionConsultar,
+    consignar:    accionConsignar,
+    retirar:      accionRetirar,
+    transferir:   accionTransferir,
+    movimientos:  accionMovimientos,
+    perfil:       accionPerfil,
+    cambiarPass:  accionCambiarPass,
+  })[a]?.();
+});
+
+$('#verTodos').addEventListener('click', accionMovimientos);
+$('#btnLogout').addEventListener('click', cerrarSesion);
+$('#toggleEye').addEventListener('click', () => {
+  saldoVisible = !saldoVisible;
+  renderSaldo();
+});
+
+// Dropdown atajos rápidos
+const dd = $('#atajosDropdown');
+$('#btnAtajos').addEventListener('click', (e) => {
+  e.stopPropagation();
+  dd.classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+  if (!dd.contains(e.target)) dd.classList.remove('open');
+});
+dd.querySelectorAll('.dropdown-item').forEach(b => {
+  b.addEventListener('click', () => dd.classList.remove('open'));
+});
+
+/* ---------- Consultar ---------- */
+function accionConsultar() {
+  const c = cuentaActiva;
+  let info = '';
+  if (c instanceof CuentaAhorros) {
+    info = `Tu saldo en <b>Cuenta de Ahorros</b> es de <b>${fmt(c.saldo)}</b>. Esta cuenta genera un <b>1.5% de interés mensual</b> que se acredita al momento de retirar.`;
+  } else if (c instanceof CuentaCorriente) {
+    info = `Tu saldo en <b>Cuenta Corriente</b> es de <b>${fmt(c.saldo)}</b>. Cuentas con un <b>20% de sobregiro</b> sobre tu saldo, llegando a un límite de <b>${fmt(c.limiteRetiro)}</b>.`;
+  } else {
+    info = `Tu cupo en <b>Tarjeta de Crédito</b> es de <b>${fmt(c.cupo)}</b>. Has utilizado <b>${fmt(c.deuda)}</b>, te queda <b>${fmt(c.cupoDisponible)}</b> disponible.`;
+  }
+  abrirModal({
+    titulo: 'Consultar Saldo',
+    sub: c.numero,
+    body: `<div style="background:var(--rosa-50);padding:18px;border-radius:14px;line-height:1.55;font-size:14px;color:var(--tinta-2)">${info}</div>`,
+    footer: `<button class="btn btn-primary" onclick="cerrarModal()">Entendido</button>`
+  });
+}
+
+/* ---------- Consignar ---------- */
+function accionConsignar() {
+  if (cuentaActiva instanceof TarjetaCredito) {
+    return abrirModal({
+      titulo: 'Tarjeta de Crédito',
+      body: `<div style="padding:14px;background:var(--ambar-bg);color:var(--ambar);border-radius:12px;font-size:14px;font-weight:600">⚠ No puedes consignar a una tarjeta de crédito desde aquí. Selecciona una cuenta de ahorros o corriente.</div>`,
+      footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>`
+    });
+  }
+  abrirModal({
+    titulo: 'Consignar Dinero',
+    sub: `${cuentaActiva.tipo} · ${cuentaActiva.numero}`,
+    body: `
+      <div class="field">
+        <label>Monto a consignar</label>
+        <input type="number" id="inpMonto" placeholder="0" min="1" step="1000" />
+        <div class="field-hint">Debe ser un valor positivo mayor a cero.</div>
+      </div>
+      <div class="field">
+        <label>Concepto (opcional)</label>
+        <input type="text" id="inpConcepto" placeholder="Ej. Ahorro mensual" />
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnConfConsig">Consignar</button>
+    `
+  });
+  $('#btnConfConsig').addEventListener('click', () => {
+    const monto = parseFloat($('#inpMonto').value);
+    const concepto = $('#inpConcepto').value.trim();
+    try {
+      cuentaActiva.consignar(monto);
+      if (concepto) cuentaActiva.movimientos[0].descripcion = concepto;
+      cerrarModal();
+      renderSaldo();
+      renderMovimientos();
+      toast('Consignación exitosa', `Se consignaron ${fmt(monto)}. Nuevo saldo: ${fmt(cuentaActiva.saldo)}`, 'success');
+    } catch (err) {
+      toast('No se pudo consignar', err.message, 'error');
+    }
+  });
+}
+
+/* ---------- Retirar ---------- */
+function accionRetirar() {
+  if (cuentaActiva instanceof TarjetaCredito) {
+    return abrirModal({
+      titulo: 'Tarjeta de Crédito',
+      body: `<div style="padding:14px;background:var(--ambar-bg);color:var(--ambar);border-radius:12px;font-size:14px;font-weight:600">⚠ La tarjeta de crédito no permite retiros, solo compras a cuotas.</div>`,
+      footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>`
+    });
+  }
+  const c = cuentaActiva;
+  const hint = c instanceof CuentaCorriente
+    ? `Límite con sobregiro 20%: <b>${fmt(c.limiteRetiro)}</b>`
+    : `Saldo disponible: <b>${fmt(c.saldo)}</b>. Se aplicará 1.5% de interés.`;
+
+  abrirModal({
+    titulo: 'Retirar Dinero',
+    sub: `${c.tipo} · ${c.numero}`,
+    body: `
+      <div class="field">
+        <label>Monto a retirar</label>
+        <input type="number" id="inpRetiro" placeholder="0" min="1" step="1000" />
+        <div class="field-hint">${hint}</div>
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnConfRetiro">Retirar</button>
+    `
+  });
+  $('#btnConfRetiro').addEventListener('click', () => {
+    const monto = parseFloat($('#inpRetiro').value);
+    try {
+      const r = c.retirar(monto);
+      cerrarModal();
+      renderSaldo();
+      renderMovimientos();
+      let msg = `Se retiraron ${fmt(monto)}. Nuevo saldo: ${fmt(r.nuevoSaldo)}`;
+      if (r.interes) msg += ` (+ interés ${fmt(r.interes)})`;
+      if (r.sobregiro) msg += ` · usaste sobregiro`;
+      toast('Retiro exitoso', msg, r.sobregiro ? 'warn' : 'success');
+    } catch (err) {
+      toast('No se pudo retirar', err.message, 'error');
+    }
+  });
+}
+
+/* ---------- Transferir ---------- */
+function accionTransferir() {
+  // Cuentas destino propias (excluyendo la actual y tarjeta)
+  const propias = cliente.cuentas.filter(c => c !== cuentaActiva && !(c instanceof TarjetaCredito));
+  const externos = otroCliente.cuentas;
+
+  if (cuentaActiva instanceof TarjetaCredito) {
+    return abrirModal({
+      titulo: 'Transferir',
+      body: `<div style="padding:14px;background:var(--ambar-bg);color:var(--ambar);border-radius:12px;font-size:14px;font-weight:600">⚠ No se permiten transferencias desde tarjeta de crédito.</div>`,
+      footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>`
+    });
+  }
+
+  abrirModal({
+    titulo: 'Transferir',
+    sub: `Desde ${cuentaActiva.tipo} · ${cuentaActiva.numero}`,
+    body: `
+      <div class="field">
+        <label>Cuenta destino</label>
+        <select id="selDestino">
+          <optgroup label="Mis cuentas">
+            ${propias.map(c => `<option value="propia:${c.numero}">${c.tipo} · ${c.numero}</option>`).join('')}
+          </optgroup>
+          <optgroup label="Otros usuarios">
+            ${externos.map(c => `<option value="ext:${c.numero}">${otroCliente.nombre} · ${c.tipo} · ${c.numero}</option>`).join('')}
+          </optgroup>
+        </select>
+        <div class="field-hint">No se permite transferir al mismo producto del mismo usuario.</div>
+      </div>
+      <div class="field">
+        <label>Monto</label>
+        <input type="number" id="inpTrans" placeholder="0" min="1" step="1000" />
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnConfTrans">Transferir</button>
+    `
+  });
+
+  $('#btnConfTrans').addEventListener('click', () => {
+    const sel = $('#selDestino').value;
+    const monto = parseFloat($('#inpTrans').value);
+    try {
+      if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+      const [scope, num] = sel.split(':');
+      const pool = scope === 'propia' ? cliente.cuentas : otroCliente.cuentas;
+      const destino = pool.find(c => c.numero === num);
+      if (!destino) throw new Error('Cuenta destino no encontrada');
+      if (destino.tipo === cuentaActiva.tipo && scope === 'propia')
+        throw new Error('No puedes transferir al mismo producto del mismo usuario');
+
+      // Validar saldo disponible
+      const limite = (cuentaActiva instanceof CuentaCorriente) ? cuentaActiva.limiteRetiro : cuentaActiva.saldo;
+      if (monto > limite) throw new Error('Monto excede saldo disponible');
+
+      cuentaActiva.saldo -= monto;
+      destino.saldo += monto;
+      cuentaActiva.registrarMovimiento(new Movimiento('transferencia', monto, `Transferencia a ${destino.tipo} ${destino.numero}`));
+      destino.registrarMovimiento(new Movimiento('consignacion', monto, `Recibida de ${cuentaActiva.titular}`));
+
+      cerrarModal();
+      renderSaldo();
+      renderMovimientos();
+      toast('Transferencia exitosa', `${fmt(monto)} a ${destino.tipo} ${destino.numero}`, 'success');
+    } catch (err) {
+      toast('No se pudo transferir', err.message, 'error');
+    }
+  });
+}
+
+/* ---------- Movimientos ---------- */
+function accionMovimientos() {
+  const movs = cuentaActiva.movimientos;
+  abrirModal({
+    titulo: 'Historial de movimientos',
+    sub: `${cuentaActiva.tipo} · ${cuentaActiva.numero}`,
+    body: `<div class="movs-full">${movs.length ? movs.map(m=>movRow(m)).join('') : '<div class="mov-empty">Sin movimientos.</div>'}</div>`,
+    footer: `<button class="btn btn-primary" onclick="cerrarModal()">Cerrar</button>`
+  });
+}
+
+/* ---------- Perfil ---------- */
+function accionPerfil() {
+  abrirModal({
+    titulo: 'Mi Perfil',
+    sub: 'Edita tus datos personales',
+    body: `
+      <div class="field"><label>Nombre completo</label><input id="pfNombre" value="${cliente.nombre}" /></div>
+      <div class="field"><label>Identificación</label><input id="pfId" value="${cliente.identificacion}" /></div>
+      <div class="field"><label>Celular</label><input id="pfCel" value="${cliente.celular}" /></div>
+      <div class="field"><label>Usuario</label><input id="pfUser" value="${cliente.usuario}" /></div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--linea)">
+        <button class="btn btn-ghost" id="btnAbrirCambioPass" style="width:100%;justify-content:center">🔒 Cambiar contraseña</button>
+      </div>
+    `,
+    footer: `
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarPerfil">Guardar cambios</button>
+    `
+  });
+
+  $('#btnGuardarPerfil').addEventListener('click', () => {
+    cliente.nombre = $('#pfNombre').value.trim();
+    cliente.identificacion = $('#pfId').value.trim();
+    cliente.celular = $('#pfCel').value.trim();
+    cliente.usuario = $('#pfUser').value.trim();
+    inicializarPanel();
+    cerrarModal();
+    toast('Perfil actualizado', 'Tus cambios se guardaron correctamente', 'success');
+  });
+  $('#btnAbrirCambioPass').addEventListener('click', () => { cerrarModal(); accionCambiarPass(); });
+}
+
+/* ---------- Cambiar contraseña ---------- */
+function accionCambiarPass() {
+  abrirModal({
+    titulo: 'Cambiar contraseña',
+    sub: 'Por seguridad, confirma con tu clave actual',
+    body: `
+      <div class="field"><label>Usuario</label><input id="cpUser" value="${cliente.usuario}" readonly style="background:var(--rosa-100);color:var(--tinta-2)" /></div>
+      <div class="field"><label>Clave actual</label><input type="password" id="cpActual" /></div>
+      <div class="field"><label>Nueva clave</label><input type="password" id="cpNueva" /></div>
+      <div class="field"><label>Confirmar nueva clave</label><input type="password" id="cpConfirma" /></div>
+    `,
+    footer: `
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarPass">Guardar</button>
+    `
+  });
+  $('#btnGuardarPass').addEventListener('click', () => {
+    const actual = $('#cpActual').value;
+    const nueva = $('#cpNueva').value;
+    const conf = $('#cpConfirma').value;
+    if (!cliente.verificarPassword(actual)) return toast('Clave incorrecta', 'La contraseña actual no coincide', 'error');
+    if (!nueva || nueva.length < 4) return toast('Clave inválida', 'Mínimo 4 caracteres', 'error');
+    if (nueva !== conf) return toast('No coincide', 'La confirmación no coincide con la nueva clave', 'error');
+    cliente.password = nueva;
+    cerrarModal();
+    toast('Contraseña actualizada', 'Recuerda usarla en tu próximo inicio de sesión', 'success');
+  });
+}
+
+/* ---------- Cerrar Sesión ---------- */
+function cerrarSesion() {
+  abrirModal({
+    titulo: '¿Cerrar sesión?',
+    sub: 'Tendrás que volver a iniciar sesión para usar la app.',
+    body: '',
+    footer: `
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-danger" id="btnConfirmLogout">Sí, cerrar sesión</button>
+    `
+  });
+  $('#btnConfirmLogout').addEventListener('click', () => {
+    cerrarModal();
+    $('#app').classList.add('hidden');
+    $('#login').classList.remove('hidden');
+    $('#loginPass').value = '';
+    intentosLogin = 0;
+    cliente.intentosFallidos = 0;
+    $('#intentos').classList.remove('show');
+    toast('Sesión cerrada', '¡Hasta pronto!', 'success');
+  });
+}
+
+// Exponer cerrarModal global para los onclick inline
+window.cerrarModal = cerrarModal;
+</script>
+
+</body>
+</html>

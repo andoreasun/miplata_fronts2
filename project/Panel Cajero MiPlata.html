@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mi Plata · Panel del Cajero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- Tokens: Rosado Pastel ---------- */
+  :root {
+    --rosa-50:  #FFF6F8;
+    --rosa-100: #FFEAF0;
+    --rosa-200: #FFD6E0;
+    --rosa-300: #FFBCCC;
+    --rosa-400: #FF9FB5;
+    --rosa-500: #F47C9A;
+    --rosa-600: #D9577A;
+    --rosa-700: #B33B5E;
+    --rosa-800: #7A2640;
+
+    --crema:    #FFFBF7;
+    --tinta:    #2D1A24;
+    --tinta-2:  #5A4451;
+    --tinta-3:  #8C7884;
+    --linea:    #F2DDE4;
+
+    --verde:    #2BB07A;
+    --verde-bg: #E6F7EF;
+    --rojo:     #D94A5A;
+    --rojo-bg:  #FCE4E7;
+    --ambar:    #C98A14;
+    --ambar-bg: #FFF3D6;
+    --azul:     #4A6CD9;
+    --azul-bg:  #E7ECFC;
+
+    --sombra-sm: 0 1px 2px rgba(122, 38, 64, .06), 0 2px 6px rgba(122, 38, 64, .04);
+    --sombra-md: 0 4px 14px rgba(122, 38, 64, .08), 0 12px 28px rgba(122, 38, 64, .06);
+    --sombra-lg: 0 18px 48px rgba(122, 38, 64, .14);
+
+    --r-sm: 10px;
+    --r-md: 16px;
+    --r-lg: 22px;
+    --r-xl: 28px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, var(--rosa-200) 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, var(--rosa-100) 0%, transparent 55%),
+      var(--rosa-50);
+    color: var(--tinta);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, select, textarea { font-family: inherit; }
+
+  /* ---------- Layout: sidebar + main ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    min-height: 100vh;
+  }
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .sidebar.open { display: flex; position: fixed; inset: 0 30% 0 0; z-index: 90; box-shadow: var(--sombra-lg); }
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    background: #fff;
+    border-right: 1px solid var(--linea);
+    display: flex; flex-direction: column;
+    padding: 22px 14px;
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+    font-weight: 800; font-size: 20px; letter-spacing: -.02em;
+    color: var(--tinta);
+    padding: 0 8px 22px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--linea);
+  }
+  .logo-mark {
+    width: 38px; height: 38px; border-radius: 11px;
+    background: linear-gradient(135deg, var(--rosa-400), var(--rosa-600));
+    display: grid; place-items: center;
+    color: #fff; font-weight: 800; font-size: 17px;
+    box-shadow: var(--sombra-sm);
+  }
+  .logo small { color: var(--rosa-700); font-weight: 600; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; display: block; }
+
+  .nav-section-title {
+    font-size: 10px; font-weight: 700;
+    color: var(--tinta-3); text-transform: uppercase; letter-spacing: .14em;
+    padding: 14px 12px 6px;
+  }
+  .side-btn {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%;
+    background: transparent; border: 0;
+    padding: 11px 12px;
+    border-radius: var(--r-sm);
+    font-size: 14px; font-weight: 600;
+    color: var(--tinta-2);
+    transition: all .14s ease;
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 2px;
+  }
+  .side-btn:hover { background: var(--rosa-50); color: var(--rosa-700); }
+  .side-btn:active { transform: scale(.98); }
+  .side-btn.active {
+    background: linear-gradient(135deg, var(--rosa-100), var(--rosa-200));
+    color: var(--rosa-700);
+  }
+  .side-btn svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+  .side-btn .badge {
+    margin-left: auto;
+    background: var(--rosa-500); color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+  }
+
+  .sidebar-spacer { flex: 1; }
+  .side-user {
+    border-top: 1px solid var(--linea);
+    padding-top: 12px; margin-top: 8px;
+    display: flex; align-items: center; gap: 10px;
+    padding-left: 8px;
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--rosa-300), var(--rosa-500));
+    color: #fff; display: grid; place-items: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .side-user-info { flex: 1; min-width: 0; }
+  .side-user-info .nombre { font-size: 13px; font-weight: 700; }
+  .side-user-info .doc { font-size: 11px; color: var(--tinta-3); }
+
+  /* ---------- Main ---------- */
+  .main {
+    padding: 22px 28px 60px;
+    max-width: 1200px;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  @media (max-width: 600px) { .main { padding: 16px 16px 60px; } }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 22px;
+  }
+  .topbar h1 {
+    margin: 0; font-size: 22px; font-weight: 800;
+    letter-spacing: -.02em;
+    flex: 1;
+  }
+  .topbar h1 small { display: block; font-size: 12px; color: var(--tinta-3); font-weight: 500; margin-top: 2px; }
+  .top-btn {
+    background: #fff;
+    border: 1px solid var(--linea);
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    box-shadow: var(--sombra-sm);
+    transition: all .14s ease;
+    color: var(--tinta-2);
+    position: relative;
+  }
+  .top-btn:hover { background: var(--rosa-50); border-color: var(--rosa-300); color: var(--rosa-700); }
+  .top-btn svg { width: 17px; height: 17px; stroke: currentColor; }
+  .top-btn .dot {
+    position: absolute; top: 8px; right: 8px;
+    width: 8px; height: 8px; border-radius: 999px;
+    background: var(--rosa-500); border: 2px solid #fff;
+  }
+
+  .menu-toggle { display: none; }
+  @media (max-width: 880px) {
+    .menu-toggle { display: grid; }
+  }
+
+  /* ---------- Card de saldo (estilo tarjeta real) ---------- */
+  .saldo-card {
+    background:
+      radial-gradient(120% 80% at 100% 0%, rgba(255,255,255,.22) 0%, transparent 55%),
+      radial-gradient(80% 60% at 0% 100%, rgba(0,0,0,.18) 0%, transparent 55%),
+      linear-gradient(135deg, var(--rosa-400) 0%, var(--rosa-600) 50%, var(--rosa-800) 100%);
+    color: #fff;
+    border-radius: 20px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      var(--sombra-lg),
+      inset 0 1px 0 rgba(255,255,255,.35),
+      inset 0 -1px 0 rgba(0,0,0,.12);
+    aspect-ratio: 1.586 / 1;
+    max-width: 520px;
+    display: flex; flex-direction: column;
+  }
+  .saldo-card::before {
+    content: '';
+    position: absolute; right: -30%; top: -40%;
+    width: 110%; height: 130%;
+    background: radial-gradient(circle, rgba(255,255,255,.14), transparent 60%);
+    pointer-events: none;
+  }
+  .saldo-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.08) 50%, transparent 60%);
+    pointer-events: none;
+  }
+  .card-top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; position: relative; z-index: 3;
+  }
+  .card-brand { text-align: right; font-weight: 800; line-height: 1; }
+  .card-brand .b-name { font-size: 16px; }
+  .card-brand .b-sub { font-size: 8px; opacity: .8; letter-spacing: .2em; text-transform: uppercase; margin-top: 4px; font-weight: 600; }
+
+  .card-chip-row {
+    display: flex; align-items: center; gap: 14px;
+    margin: 16px 0 4px; position: relative; z-index: 3;
+  }
+  .card-chip {
+    width: 40px; height: 32px; border-radius: 6px;
+    background: linear-gradient(135deg, #f5d28b 0%, #c9a24a 50%, #f5d28b 100%);
+    position: relative;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.15);
+  }
+  .card-chip::before {
+    content: ''; position: absolute; left: 8px; right: 8px; top: 9px;
+    height: 1px; background: rgba(0,0,0,.25);
+    box-shadow: 0 5px 0 rgba(0,0,0,.25), 0 10px 0 rgba(0,0,0,.25);
+  }
+  .card-wave { width: 20px; height: 20px; color: rgba(255,255,255,.85); }
+
+  .saldo-tipo-tabs {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,.18);
+    padding: 3px; border-radius: 999px;
+    width: fit-content;
+    backdrop-filter: blur(8px);
+    position: relative; z-index: 3;
+  }
+  .saldo-tab {
+    background: transparent; border: 0; color: rgba(255,255,255,.85);
+    padding: 5px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+    transition: all .2s ease;
+  }
+  .saldo-tab.active { background: #fff; color: var(--rosa-700); box-shadow: 0 4px 10px rgba(0,0,0,.08); }
+
+  .saldo-label { font-size: 10px; opacity: .85; margin: 0 0 3px; position: relative; z-index: 3; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; }
+  .saldo-amount {
+    font-size: 28px; font-weight: 800; letter-spacing: -.02em;
+    position: relative; z-index: 3;
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 4px;
+  }
+  .saldo-amount .currency { font-size: 13px; opacity: .8; font-weight: 600; }
+
+  .card-number {
+    font-family: 'Plus Jakarta Sans', monospace;
+    font-size: 18px; letter-spacing: .14em;
+    font-weight: 700;
+    margin-top: auto;
+    text-shadow: 0 1px 1px rgba(0,0,0,.18);
+    position: relative; z-index: 3;
+    display: flex; gap: 10px;
+  }
+  .card-bottom {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: 10px; gap: 14px;
+    position: relative; z-index: 3;
+  }
+  .card-meta-label { font-size: 8px; opacity: .75; letter-spacing: .18em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+  .card-meta-val { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .card-network { display: flex; align-items: center; }
+  .card-network-dot {
+    width: 22px; height: 22px; border-radius: 999px;
+    background: rgba(255,255,255,.85);
+    margin-left: -8px; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  }
+  .card-network-dot:first-child { margin-left: 0; background: rgba(255,255,255,.6); }
+
+  .toggle-eye {
+    background: rgba(255,255,255,.2); border: 0; width: 28px; height: 28px;
+    border-radius: 999px; color: #fff;
+    display: grid; place-items: center;
+    transition: all .15s ease; flex-shrink: 0;
+  }
+  .toggle-eye:hover { background: rgba(255,255,255,.32); }
+
+  /* ---------- Layout columnas ---------- */
+  .row-2 {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .row-2 { grid-template-columns: 1fr; } }
+
+  /* ---------- Stats row ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+  }
+  @media (max-width: 600px) { .stats { grid-template-columns: 1fr 1fr; } }
+  .stat {
+    background: #fff; border: 1px solid var(--linea);
+    border-radius: var(--r-md); padding: 14px;
+    box-shadow: var(--sombra-sm);
+  }
+  .stat .label { font-size: 11px; color: var(--tinta-3); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+  .stat .val { font-size: 20px; font-weight: 800; margin-top: 4px; letter-spacing: -.01em; }
+  .stat .delta { font-size: 11px; font-weight: 600; margin-top: 2px; }
+  .stat .delta.up { color: var(--verde); }
+  .stat .delta.down { color: var(--rojo); }
+
+  /* ---------- Panel ---------- */
+  .panel {
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    box-shadow: var(--sombra-sm);
+  }
+  .panel-titulo {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; gap: 8px;
+  }
+  .panel-titulo h3 { margin: 0; font-size: 15px; font-weight: 700; }
+  .panel-titulo a { color: var(--rosa-700); font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; }
+  .panel-titulo a:hover { text-decoration: underline; }
+
+  /* ---------- Movimientos ---------- */
+  .movimiento {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--linea);
+    cursor: pointer;
+    transition: background .12s ease;
+    margin: 0 -8px; padding-left: 8px; padding-right: 8px;
+    border-radius: 8px;
+  }
+  .movimiento:hover { background: var(--rosa-50); }
+  .movimiento:last-child { border-bottom: 0; }
+  .mov-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .mov-icon.consig { background: var(--verde-bg); color: var(--verde); }
+  .mov-icon.retiro { background: var(--rojo-bg); color: var(--rojo); }
+  .mov-icon.transf { background: var(--rosa-100); color: var(--rosa-700); }
+  .mov-icon.servicio { background: var(--azul-bg); color: var(--azul); }
+  .mov-icon.recarga { background: var(--ambar-bg); color: var(--ambar); }
+  .mov-icon.compra { background: var(--rosa-100); color: var(--rosa-700); }
+  .mov-icon svg { width: 16px; height: 16px; stroke: currentColor; }
+  .mov-info { flex: 1; min-width: 0; }
+  .mov-tipo { font-weight: 600; font-size: 14px; }
+  .mov-fecha { font-size: 11px; color: var(--tinta-3); margin-top: 1px; }
+  .mov-valor { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .mov-valor.in { color: var(--verde); }
+  .mov-valor.out { color: var(--rojo); }
+  .mov-empty { text-align: center; color: var(--tinta-3); padding: 30px 0; font-size: 13px; }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(45, 26, 36, .35);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+    animation: fade .2s ease;
+  }
+  .modal-backdrop.show { display: flex; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { transform: scale(.96) translateY(8px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+  .modal {
+    background: #fff;
+    border-radius: var(--r-xl);
+    width: 100%; max-width: 480px;
+    box-shadow: var(--sombra-lg);
+    animation: pop .25s cubic-bezier(.2,.9,.3,1.2);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal.wide { max-width: 640px; }
+  .modal-header {
+    padding: 22px 24px 8px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  }
+  .modal-header h2 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+  .modal-header p { margin: 4px 0 0; color: var(--tinta-3); font-size: 13px; }
+  .modal-close {
+    background: var(--rosa-50); border: 0; width: 32px; height: 32px;
+    border-radius: 999px;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--rosa-200); }
+  .modal-body { padding: 18px 24px 24px; }
+  .modal-footer {
+    padding: 0 24px 24px;
+    display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+  }
+
+  /* ---------- Forms ---------- */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--tinta-2); margin-bottom: 6px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    background: var(--rosa-50);
+    border: 1.5px solid var(--linea);
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    font-size: 15px; color: var(--tinta);
+    transition: all .15s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: 0;
+    border-color: var(--rosa-400);
+    background: #fff;
+    box-shadow: 0 0 0 4px var(--rosa-100);
+  }
+  .field-hint { font-size: 11px; color: var(--tinta-3); margin-top: 4px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    border: 0; padding: 11px 18px;
+    border-radius: var(--r-sm);
+    font-weight: 700; font-size: 14px;
+    transition: all .15s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn svg { width: 14px; height: 14px; stroke: currentColor; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--rosa-500), var(--rosa-700));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(217, 87, 122, .3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(217, 87, 122, .4); }
+  .btn-ghost { background: var(--rosa-50); color: var(--tinta-2); }
+  .btn-ghost:hover { background: var(--rosa-100); }
+  .btn-danger { background: var(--rojo-bg); color: var(--rojo); }
+  .btn-danger:hover { background: var(--rojo); color: #fff; }
+
+  /* ---------- Toast ---------- */
+  .toast-wrap {
+    position: fixed; top: 20px; right: 20px; z-index: 200;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .toast {
+    background: #fff; border: 1px solid var(--linea);
+    padding: 14px 18px; border-radius: var(--r-md);
+    box-shadow: var(--sombra-md);
+    display: flex; align-items: center; gap: 12px;
+    min-width: 280px; max-width: 380px;
+    animation: slideIn .3s cubic-bezier(.2,.9,.3,1.2);
+    border-left: 4px solid var(--rosa-500);
+  }
+  .toast.success { border-left-color: var(--verde); }
+  .toast.error   { border-left-color: var(--rojo); }
+  .toast.warn    { border-left-color: var(--ambar); }
+  .toast-icon {
+    width: 32px; height: 32px; border-radius: 999px;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .toast.success .toast-icon { background: var(--verde-bg); color: var(--verde); }
+  .toast.error   .toast-icon { background: var(--rojo-bg);  color: var(--rojo); }
+  .toast.warn    .toast-icon { background: var(--ambar-bg); color: var(--ambar); }
+  .toast-icon svg { width: 16px; height: 16px; stroke: currentColor; }
+  .toast-text { flex: 1; }
+  .toast-title { font-weight: 700; font-size: 14px; }
+  .toast-msg { font-size: 12px; color: var(--tinta-3); margin-top: 2px; }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast.out { animation: slideOut .25s ease forwards; }
+  @keyframes slideOut { to { transform: translateX(20px); opacity: 0; } }
+
+  /* ---------- Login ---------- */
+  .login-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+  .login-card {
+    background: #fff; border-radius: var(--r-xl);
+    padding: 36px 32px; width: 100%; max-width: 400px;
+    box-shadow: var(--sombra-lg); border: 1px solid var(--linea);
+  }
+  .login-card .logo { margin: 0 auto 18px; justify-content: center; flex-direction: column; align-items: center; padding: 0; border: 0; }
+  .login-card h1 { margin: 0 0 4px; font-size: 22px; text-align: center; }
+  .login-card .sub { color: var(--tinta-3); font-size: 13px; text-align: center; margin-bottom: 24px; }
+  .intentos {
+    background: var(--ambar-bg); color: var(--ambar);
+    padding: 8px 12px; border-radius: var(--r-sm);
+    font-size: 12px; font-weight: 600;
+    text-align: center; margin-bottom: 14px; display: none;
+  }
+  .intentos.show { display: block; }
+  .login-hint {
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--linea);
+    text-align: center; font-size: 12px; color: var(--tinta-3);
+  }
+  .login-hint code { background: var(--rosa-100); color: var(--rosa-700); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+
+  .hidden { display: none !important; }
+
+  /* ---------- Servicios grid ---------- */
+  .servicios-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 480px) { .servicios-grid { grid-template-columns: repeat(2, 1fr); } }
+  .servicio-btn {
+    background: var(--rosa-50); border: 1.5px solid transparent;
+    border-radius: var(--r-md);
+    padding: 14px 10px;
+    text-align: center;
+    transition: all .14s ease;
+  }
+  .servicio-btn:hover { border-color: var(--rosa-300); background: #fff; }
+  .servicio-btn.selected { border-color: var(--rosa-500); background: #fff; box-shadow: 0 0 0 3px var(--rosa-100); }
+  .servicio-emoji { font-size: 22px; margin-bottom: 4px; }
+  .servicio-nombre { font-size: 11px; font-weight: 700; color: var(--tinta-2); }
+
+  /* ---------- Cuotas selector ---------- */
+  .cuotas-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .cuota-btn {
+    background: var(--rosa-50); border: 1.5px solid transparent;
+    border-radius: var(--r-sm);
+    padding: 10px 4px;
+    font-weight: 700; font-size: 14px;
+    color: var(--tinta);
+    transition: all .14s ease;
+  }
+  .cuota-btn:hover { border-color: var(--rosa-300); }
+  .cuota-btn.selected { border-color: var(--rosa-500); background: #fff; box-shadow: 0 0 0 3px var(--rosa-100); color: var(--rosa-700); }
+
+  .info-box {
+    background: var(--rosa-50);
+    border-left: 3px solid var(--rosa-400);
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--tinta-2);
+    line-height: 1.5;
+  }
+  .info-box.warn { background: var(--ambar-bg); color: var(--ambar); border-color: var(--ambar); }
+
+  /* ---------- Recibo / extracto ---------- */
+  .recibo {
+    background: #fff;
+    border: 2px dashed var(--rosa-300);
+    border-radius: var(--r-md);
+    padding: 22px;
+    font-family: 'Plus Jakarta Sans', monospace;
+  }
+  .recibo-header {
+    text-align: center;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--linea);
+    margin-bottom: 14px;
+  }
+  .recibo-header .marca {
+    font-weight: 800; font-size: 18px;
+    background: linear-gradient(135deg, var(--rosa-500), var(--rosa-700));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    letter-spacing: -.01em;
+  }
+  .recibo-header .sub { font-size: 10px; color: var(--tinta-3); letter-spacing: .14em; text-transform: uppercase; margin-top: 2px; }
+  .recibo-tipo {
+    text-align: center; margin: 12px 0;
+    font-size: 13px; font-weight: 700;
+    color: var(--rosa-700); text-transform: uppercase;
+    letter-spacing: .12em;
+  }
+  .recibo-monto {
+    text-align: center;
+    font-size: 32px; font-weight: 800;
+    letter-spacing: -.02em;
+    margin: 10px 0 4px;
+  }
+  .recibo-monto.out { color: var(--rojo); }
+  .recibo-monto.in { color: var(--verde); }
+  .recibo-fecha {
+    text-align: center;
+    font-size: 12px; color: var(--tinta-3);
+    margin-bottom: 14px;
+  }
+  .recibo-divider { border-top: 1px dashed var(--linea); margin: 14px 0; }
+  .recibo-row {
+    display: flex; justify-content: space-between; gap: 12px;
+    font-size: 13px;
+    padding: 6px 0;
+  }
+  .recibo-row .k { color: var(--tinta-3); font-weight: 500; }
+  .recibo-row .v { color: var(--tinta); font-weight: 700; text-align: right; }
+  .recibo-foot {
+    text-align: center;
+    margin-top: 18px; padding-top: 14px;
+    border-top: 1px dashed var(--linea);
+    font-size: 10px; color: var(--tinta-3);
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+  .recibo-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--verde-bg); color: var(--verde);
+    padding: 4px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    margin: 0 auto;
+  }
+
+  /* Extractos: lista y filtros */
+  .extracto-tabs {
+    display: flex; gap: 4px; padding: 4px;
+    background: var(--rosa-50); border-radius: var(--r-sm);
+    margin-bottom: 14px;
+    overflow-x: auto;
+  }
+  .extracto-tab {
+    background: transparent; border: 0;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    color: var(--tinta-2);
+    white-space: nowrap;
+  }
+  .extracto-tab.active { background: #fff; color: var(--rosa-700); box-shadow: var(--sombra-sm); }
+
+  /* ---------- Notificaciones dropdown ---------- */
+  .dropdown { position: relative; }
+  .dropdown-menu {
+    position: absolute; right: 0; top: calc(100% + 6px);
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: var(--r-md);
+    box-shadow: var(--sombra-md);
+    min-width: 280px;
+    padding: 6px;
+    display: none;
+    z-index: 50;
+    animation: pop .18s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .dropdown.open .dropdown-menu { display: block; }
+  .dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 10px 12px;
+    background: transparent; border: 0; border-radius: var(--r-sm);
+    font-size: 13px; font-weight: 600;
+    color: var(--tinta-2); text-align: left;
+  }
+  .dropdown-item:hover { background: var(--rosa-50); color: var(--rosa-700); }
+  .dropdown-item .icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--rosa-100); color: var(--rosa-700);
+    display: grid; place-items: center; flex-shrink: 0;
+    font-size: 14px;
+  }
+  .dropdown-divider { height: 1px; background: var(--linea); margin: 4px 6px; }
+
+  .notif-item {
+    padding: 12px;
+    border-radius: var(--r-sm);
+    cursor: pointer; transition: background .12s ease;
+  }
+  .notif-item:hover { background: var(--rosa-50); }
+  .notif-title { font-weight: 700; font-size: 13px; }
+  .notif-text { font-size: 12px; color: var(--tinta-3); margin-top: 2px; line-height: 1.4; }
+  .notif-time { font-size: 10px; color: var(--tinta-3); margin-top: 4px; text-transform: uppercase; letter-spacing: .08em; }
+
+  /* ---------- Vistas (router) ---------- */
+  .view { animation: fade .25s ease; }
+
+  /* ---------- Perfil page ---------- */
+  .perfil-page { display: grid; grid-template-columns: 320px 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 880px) { .perfil-page { grid-template-columns: 1fr; } }
+
+  .perfil-photo-card {
+    background: #fff; border: 1px solid var(--linea);
+    border-radius: var(--r-lg); padding: 24px;
+    box-shadow: var(--sombra-sm);
+    text-align: center;
+  }
+  .perfil-photo-wrap {
+    width: 140px; height: 140px;
+    border-radius: 999px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--rosa-300), var(--rosa-600));
+    display: grid; place-items: center;
+    color: #fff; font-weight: 800; font-size: 48px;
+    box-shadow: var(--sombra-md);
+    position: relative; overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s ease;
+  }
+  .perfil-photo-wrap:hover { transform: scale(1.03); }
+  .perfil-photo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .perfil-photo-wrap .overlay {
+    position: absolute; inset: 0;
+    background: rgba(45, 26, 36, .6);
+    color: #fff; font-size: 11px; font-weight: 700;
+    display: grid; place-items: center;
+    opacity: 0; transition: opacity .2s ease;
+    text-transform: uppercase; letter-spacing: .12em;
+  }
+  .perfil-photo-wrap:hover .overlay { opacity: 1; }
+  .perfil-name { font-weight: 800; font-size: 18px; margin: 6px 0 2px; }
+  .perfil-doc { color: var(--tinta-3); font-size: 13px; margin-bottom: 14px; }
+  .perfil-photo-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  .perfil-section {
+    background: #fff; border: 1px solid var(--linea);
+    border-radius: var(--r-lg); padding: 24px;
+    box-shadow: var(--sombra-sm);
+    margin-bottom: 18px;
+  }
+  .perfil-section h3 {
+    margin: 0 0 4px; font-size: 16px; font-weight: 700;
+  }
+  .perfil-section .desc { color: var(--tinta-3); font-size: 13px; margin-bottom: 18px; }
+
+  .back-btn {
+    background: #fff; border: 1px solid var(--linea);
+    padding: 8px 14px; border-radius: var(--r-sm);
+    font-size: 13px; font-weight: 600;
+    color: var(--tinta-2);
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-bottom: 14px;
+  }
+  .back-btn:hover { background: var(--rosa-50); color: var(--rosa-700); border-color: var(--rosa-300); }
+
+  /* Avatar global con foto */
+  .avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+
+  /* Tabs internos del modal Consignar */
+  .seg {
+    display: flex; gap: 4px; padding: 4px;
+    background: var(--rosa-50); border-radius: var(--r-sm);
+    margin-bottom: 14px;
+  }
+  .seg button {
+    flex: 1; background: transparent; border: 0;
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; color: var(--tinta-2);
+  }
+  .seg button.active { background: #fff; color: var(--rosa-700); box-shadow: var(--sombra-sm); }
+
+  /* ---------- Print: solo recibo ---------- */
+  @media print {
+    body * { visibility: hidden; }
+    #reciboPrintable, #reciboPrintable * { visibility: visible; }
+    #reciboPrintable {
+      position: absolute; left: 0; top: 0; width: 100%;
+      padding: 30px;
+      background: #fff;
+    }
+    .recibo { border: 2px dashed #999; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== LOGIN ============== -->
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <div class="logo">
+      <div class="logo-mark">M</div>
+      <div style="text-align:center">
+        <small>Banca Digital</small>
+        <div>Mi Plata</div>
+      </div>
+    </div>
+    <h1>Bienvenido de nuevo</h1>
+    <p class="sub">Ingresa a tu cuenta para continuar</p>
+
+    <div id="intentos" class="intentos">⚠ Intento <span id="intentosNum">1</span> de 3</div>
+
+    <form id="formLogin" autocomplete="off">
+      <div class="field">
+        <label>Usuario</label>
+        <input type="text" id="loginUser" placeholder="ej. maria" required />
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+        Iniciar sesión
+      </button>
+    </form>
+
+    <div class="login-hint">
+      Demo: usuario <code>maria</code> · clave <code>1234</code>
+    </div>
+  </div>
+</div>
+
+<!-- ============== APP SHELL ============== -->
+<div id="app" class="shell hidden">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="logo-mark">M</div>
+      <div>
+        <small>Banca Digital</small>
+        <div>Mi Plata</div>
+      </div>
+    </div>
+
+    <div class="nav-section-title">Inicio</div>
+    <button class="side-btn" data-action="inicio">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Dashboard
+    </button>
+    <button class="side-btn" data-action="perfil">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Mi perfil
+    </button>
+
+    <div class="nav-section-title">Transacciones</div>
+    <button class="side-btn" data-action="consignar">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Consignar
+    </button>
+    <button class="side-btn" data-action="retirar">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Retirar
+    </button>
+    <button class="side-btn" data-action="transferir">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Transferir
+    </button>
+    <button class="side-btn" data-action="consultar">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      Consultar saldo
+    </button>
+
+    <div class="nav-section-title">Servicios</div>
+    <button class="side-btn" data-action="servicios">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2l3-9 6 18 3-9h4"/></svg>
+      Pagar servicios
+    </button>
+    <button class="side-btn" data-action="recargas">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      Recargas
+    </button>
+    <button class="side-btn" data-action="comprarTC">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Comprar a cuotas
+    </button>
+
+    <div class="nav-section-title">Documentos</div>
+    <button class="side-btn" data-action="movimientos">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Movimientos
+    </button>
+    <button class="side-btn" data-action="extractos">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+      Extractos
+    </button>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="side-user">
+      <div class="avatar" id="avatarSide">M</div>
+      <div class="side-user-info">
+        <div class="nombre" id="userNombre">María López</div>
+        <div class="doc" id="userDoc">CC 1.234.567</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Top bar -->
+    <div class="topbar">
+      <button class="top-btn menu-toggle" id="btnMenu" title="Menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h1 id="pageTitle">Inicio<small id="pageSub">Resumen de tus cuentas</small></h1>
+
+      <button class="top-btn" data-action="perfil" title="Perfil">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+
+      <!-- Notificaciones -->
+      <div class="dropdown" id="notifDropdown">
+        <button class="top-btn" id="btnNotif" title="Notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="dot"></div>
+        </button>
+        <div class="dropdown-menu" style="min-width:300px">
+          <div style="padding:8px 12px;font-weight:700;font-size:13px">Notificaciones</div>
+          <div class="dropdown-divider"></div>
+          <div class="notif-item">
+            <div class="notif-title">Consignación recibida</div>
+            <div class="notif-text">Recibiste $500.000 de Pago de nómina en Cuenta de Ahorros.</div>
+            <div class="notif-time">Hace 2 días</div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-title">Pago de tarjeta próximo</div>
+            <div class="notif-text">Recuerda pagar tu tarjeta antes del 25 del mes.</div>
+            <div class="notif-time">Hace 5 días</div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-title">Tasa de interés actualizada</div>
+            <div class="notif-text">Tu cuenta de ahorros ahora genera 1.5% mensual.</div>
+            <div class="notif-time">Hace 1 semana</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Atajos -->
+      <div class="dropdown" id="atajosDropdown">
+        <button class="top-btn" id="btnAtajos" title="Atajos rápidos">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </button>
+        <div class="dropdown-menu">
+          <div style="padding:8px 12px;font-weight:700;font-size:13px">Atajos rápidos</div>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" data-action="consignar"><span class="icon">＋</span><span>Consignar a Ahorros</span></button>
+          <button class="dropdown-item" data-action="transferir"><span class="icon">↻</span><span>Transferir entre cuentas</span></button>
+          <button class="dropdown-item" data-action="servicios"><span class="icon">⚡</span><span>Pagar servicios</span></button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" data-action="cambiarPass"><span class="icon">🔒</span><span>Cambiar contraseña</span></button>
+          <button class="dropdown-item" id="btnLogout"><span class="icon">⏻</span><span>Cerrar sesión</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Vista: Dashboard ===== -->
+    <div id="viewDashboard" class="view">
+    <div class="row-2">
+      <!-- Tarjeta -->
+      <div>
+        <div class="saldo-card">
+          <div class="card-top">
+            <div class="saldo-tipo-tabs" id="cuentaTabs"></div>
+            <div class="card-brand">
+              <div class="b-name">Mi Plata</div>
+              <div class="b-sub">Banca Digital</div>
+            </div>
+          </div>
+
+          <div class="card-chip-row">
+            <div class="card-chip"></div>
+            <div class="card-wave">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M8.5 8.5a5 5 0 0 1 0 7"/>
+                <path d="M11.5 5.5a9 9 0 0 1 0 13"/>
+                <path d="M14.5 2.5a13 13 0 0 1 0 19"/>
+              </svg>
+            </div>
+            <button class="toggle-eye" id="toggleEye" title="Mostrar/ocultar saldo" style="margin-left:auto">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;stroke:#fff">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="saldo-label" id="saldoLabel">Saldo disponible</div>
+          <div class="saldo-amount">
+            <span class="currency">COP</span>
+            <span id="saldoMonto">$0</span>
+          </div>
+
+          <div class="card-number" id="cardNumber">
+            <span>••••</span><span>••••</span><span>••••</span><span>2210</span>
+          </div>
+
+          <div class="card-bottom">
+            <div>
+              <div class="card-meta-label">Titular</div>
+              <div class="card-meta-val" id="cardTitular">María López</div>
+            </div>
+            <div>
+              <div class="card-meta-label">Válida hasta</div>
+              <div class="card-meta-val" id="cardExpira">12/28</div>
+            </div>
+            <div class="card-network" title="Mi Plata">
+              <div class="card-network-dot"></div>
+              <div class="card-network-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Ingresos del mes</div>
+            <div class="val" id="statIngresos">$0</div>
+            <div class="delta up">▲ Movimientos entrantes</div>
+          </div>
+          <div class="stat">
+            <div class="label">Gastos del mes</div>
+            <div class="val" id="statGastos">$0</div>
+            <div class="delta down">▼ Salidas + transferencias</div>
+          </div>
+          <div class="stat">
+            <div class="label">Movimientos</div>
+            <div class="val" id="statCount">0</div>
+            <div class="delta">Total registrados</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Movimientos -->
+      <div>
+        <div class="panel">
+          <div class="panel-titulo">
+            <h3>Movimientos recientes</h3>
+            <a id="verTodos">Ver todos →</a>
+          </div>
+          <div id="listaMovs"></div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /viewDashboard -->
+
+    <!-- ===== Vista: Perfil ===== -->
+    <div id="viewPerfil" class="view hidden">
+      <button class="back-btn" data-action="inicio">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Volver al dashboard
+      </button>
+
+      <div class="perfil-page">
+        <!-- Foto + identidad -->
+        <div class="perfil-photo-card">
+          <div class="perfil-photo-wrap" id="perfilPhotoWrap">
+            <span id="perfilPhotoIniciales">M</span>
+            <div class="overlay">Cambiar foto</div>
+          </div>
+          <input type="file" id="perfilPhotoInput" accept="image/*" hidden />
+          <div class="perfil-name" id="perfilNombreCard">María López</div>
+          <div class="perfil-doc" id="perfilDocCard">CC 1.234.567</div>
+          <div class="perfil-photo-actions">
+            <button class="btn btn-ghost" id="btnSubirFoto">📷 Subir foto</button>
+            <button class="btn btn-ghost" id="btnQuitarFoto">Quitar</button>
+          </div>
+        </div>
+
+        <!-- Datos + cambio clave -->
+        <div>
+          <div class="perfil-section">
+            <h3>Datos personales</h3>
+            <div class="desc">Actualiza la información de tu cuenta. Estos datos aparecen en tus comprobantes.</div>
+            <div class="field-row">
+              <div class="field"><label>Nombre completo</label><input id="pfNombre" /></div>
+              <div class="field"><label>Identificación (CC)</label><input id="pfId" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Celular</label><input id="pfCel" /></div>
+              <div class="field"><label>Correo electrónico</label><input id="pfMail" type="email" placeholder="tu@correo.com" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Usuario</label><input id="pfUser" /></div>
+              <div class="field"><label>Dirección</label><input id="pfDir" placeholder="Calle 1 # 2-3" /></div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+              <button class="btn btn-ghost" id="btnRevertirPerfil">Cancelar cambios</button>
+              <button class="btn btn-primary" id="btnGuardarPerfil">💾 Guardar cambios</button>
+            </div>
+          </div>
+
+          <div class="perfil-section">
+            <h3>Cambiar contraseña</h3>
+            <div class="desc">Por seguridad, confirma tu clave actual antes de elegir una nueva.</div>
+            <div class="field"><label>Clave actual</label><input type="password" id="pfPassActual" /></div>
+            <div class="field-row">
+              <div class="field"><label>Nueva clave</label><input type="password" id="pfPassNueva" /></div>
+              <div class="field"><label>Confirmar nueva clave</label><input type="password" id="pfPassConfirma" /></div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+              <button class="btn btn-primary" id="btnCambiarPass">🔒 Actualizar contraseña</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /viewPerfil -->
+  </main>
+</div>
+
+<!-- ============== Modal genérico ============== -->
+<div id="modal" class="modal-backdrop">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <div>
+        <h2 id="modalTitulo">Título</h2>
+        <p id="modalSub"></p>
+      </div>
+      <button class="modal-close" id="modalClose">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Recibo printable container (oculto, solo para imprimir) -->
+<div id="reciboPrintable" style="display:none"></div>
+
+<!-- Toast container -->
+<div id="toastWrap" class="toast-wrap"></div>
+
+<!-- ============== JavaScript: POO ============== -->
+<script>
+'use strict';
+
+/* ======== POO: clases con herencia y polimorfismo ======== */
+class Movimiento {
+  static lastId = 1000;
+  constructor(tipo, valor, descripcion = '', meta = {}) {
+    this.id = ++Movimiento.lastId;
+    this.fecha = new Date();
+    this.tipo = tipo; // consignacion | retiro | transferencia | servicio | recarga | compra
+    this.valor = valor;
+    this.descripcion = descripcion;
+    this.meta = meta; // datos extra para el recibo
+  }
+}
+
+class Cuenta {
+  #saldo;
+  constructor(numero, titular, saldoInicial = 0) {
+    this.numero = numero;
+    this.titular = titular;
+    this.#saldo = saldoInicial;
+    this.movimientos = [];
+  }
+  get saldo() { return this.#saldo; }
+  set saldo(v) { this.#saldo = v; }
+  consignar(monto, desc='Consignación en efectivo', meta={}) {
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('El monto debe ser positivo');
+    this.#saldo += monto;
+    const m = new Movimiento('consignacion', monto, desc, meta);
+    this.movimientos.unshift(m);
+    return m;
+  }
+  retirar(monto) { throw new Error('Implementar en subclase'); }
+  registrarMovimiento(m) { this.movimientos.unshift(m); return m; }
+}
+
+class CuentaAhorros extends Cuenta {
+  static TASA = 0.015;
+  constructor(n, t, s=0) { super(n, t, s); this.tipo = 'Ahorros'; }
+  retirar(monto) {
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+    if (monto > this.saldo) throw new Error('Saldo insuficiente');
+    const interes = this.saldo * CuentaAhorros.TASA;
+    this.saldo = this.saldo - monto + interes;
+    const m = new Movimiento('retiro', monto, `Retiro (interés acreditado: $${Math.round(interes).toLocaleString('es-CO')})`, { interes });
+    this.registrarMovimiento(m);
+    return { mov: m, nuevoSaldo: this.saldo, interes };
+  }
+}
+
+class CuentaCorriente extends Cuenta {
+  static SOBREGIRO = 0.20;
+  constructor(n, t, s=0) { super(n, t, s); this.tipo = 'Corriente'; }
+  get limiteRetiro() { return this.saldo * (1 + CuentaCorriente.SOBREGIRO); }
+  retirar(monto) {
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+    if (monto > this.limiteRetiro) throw new Error(`Excede el límite (incluye 20% de sobregiro)`);
+    this.saldo -= monto;
+    const enSobregiro = this.saldo < 0;
+    const m = new Movimiento('retiro', monto, enSobregiro ? 'Retiro con sobregiro' : 'Retiro', { sobregiro: enSobregiro });
+    this.registrarMovimiento(m);
+    return { mov: m, nuevoSaldo: this.saldo, sobregiro: enSobregiro };
+  }
+}
+
+class TarjetaCredito extends Cuenta {
+  constructor(n, t, cupo=0) { super(n, t, 0); this.tipo = 'Tarjeta'; this.cupo = cupo; this.deuda = 0; }
+  static tasa(c) { if (c <= 2) return 0; if (c <= 6) return 0.019; return 0.023; }
+  static cuotaMensual(cap, c) {
+    const t = TarjetaCredito.tasa(c);
+    if (t === 0) return cap / c;
+    return (cap * t) / (1 - Math.pow(1 + t, -c));
+  }
+  comprar(monto, cuotas, desc='Compra') {
+    if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+    if (cuotas < 1) throw new Error('Cuotas inválidas');
+    if (this.deuda + monto > this.cupo) throw new Error('Excede el cupo disponible');
+    const cm = TarjetaCredito.cuotaMensual(monto, cuotas);
+    const tasa = TarjetaCredito.tasa(cuotas);
+    this.deuda += monto;
+    const m = new Movimiento('compra', monto, `${desc} · ${cuotas} cuota(s) de $${Math.round(cm).toLocaleString('es-CO')}`, { cuotas, cuotaMensual: cm, tasa });
+    this.registrarMovimiento(m);
+    return { mov: m, cuotaMensual: cm, totalDeuda: this.deuda, tasa };
+  }
+  retirar() { throw new Error('La tarjeta de crédito no permite retiros'); }
+  get cupoDisponible() { return this.cupo - this.deuda; }
+}
+
+class Cliente {
+  constructor({ identificacion, nombre, celular, usuario, password }) {
+    this.identificacion = identificacion;
+    this.nombre = nombre;
+    this.celular = celular;
+    this.usuario = usuario;
+    this.password = password;
+    this.cuentas = [];
+    this.intentosFallidos = 0;
+    this.bloqueado = false;
+  }
+  agregarCuenta(c) { this.cuentas.push(c); }
+  verificarPassword(p) { return this.password === p; }
+}
+
+/* ======== Datos demo ======== */
+const cliente = new Cliente({ identificacion:'1.234.567', nombre:'María López', celular:'+57 300 555 1234', usuario:'maria', password:'1234' });
+const ahorros   = new CuentaAhorros('AH-7849-2210', 'María López', 2_450_000);
+const corriente = new CuentaCorriente('CC-3201-7745', 'María López', 850_000);
+const tarjeta   = new TarjetaCredito('TC-4521-8899-2210', 'María López', 5_000_000); tarjeta.deuda = 1_120_000;
+
+ahorros.movimientos.push(
+  Object.assign(new Movimiento('consignacion', 500_000, 'Pago de nómina', { origen: 'Empresa SAS' }), { fecha: new Date(Date.now() - 86400000 * 2) }),
+  Object.assign(new Movimiento('retiro', 120_000, 'Retiro cajero CC93', { ubicacion: 'CC Premium Plaza' }), { fecha: new Date(Date.now() - 86400000 * 5) }),
+  Object.assign(new Movimiento('transferencia', 80_000, 'Transferencia a Juan P.', { destino: 'AH-9988-1100' }), { fecha: new Date(Date.now() - 86400000 * 7) }),
+);
+corriente.movimientos.push(
+  Object.assign(new Movimiento('consignacion', 250_000, 'Depósito en sucursal', { sucursal: 'Centro' }), { fecha: new Date(Date.now() - 86400000) }),
+);
+tarjeta.movimientos.push(
+  Object.assign(new Movimiento('compra', 320_000, 'Almacenes Éxito · 3 cuotas', { cuotas: 3, cuotaMensual: 110_656, tasa: 0.019 }), { fecha: new Date(Date.now() - 86400000 * 3) }),
+);
+
+cliente.agregarCuenta(ahorros);
+cliente.agregarCuenta(corriente);
+cliente.agregarCuenta(tarjeta);
+
+const otroCliente = new Cliente({ identificacion:'7.654.321', nombre:'Juan Pérez', celular:'+57 311 999 8877', usuario:'juanp', password:'0000' });
+const otroAhorros = new CuentaAhorros('AH-9988-1100', 'Juan Pérez', 320_000);
+otroCliente.agregarCuenta(otroAhorros);
+
+/* ======== Estado UI ======== */
+let cuentaActiva = ahorros;
+let saldoVisible = true;
+let intentosLogin = 0;
+
+/* ======== Helpers ======== */
+const $ = (s, p=document) => p.querySelector(s);
+const $$ = (s, p=document) => [...p.querySelectorAll(s)];
+const fmt = (n) => '$' + Math.round(n).toLocaleString('es-CO');
+const fmtFecha = (d) => d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+const fmtFechaLarga = (d) => d.toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+const iniciales = (n) => n.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+const opNumero = (id) => 'OP-' + String(id).padStart(8, '0');
+
+function toast(titulo, msg, tipo='success') {
+  const wrap = $('#toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${tipo}`;
+  const iconoSVG = {
+    success: '<polyline points="20 6 9 17 4 12"/>',
+    error:   '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    warn:    '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  }[tipo] || '';
+  el.innerHTML = `<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${iconoSVG}</svg></div><div class="toast-text"><div class="toast-title">${titulo}</div><div class="toast-msg">${msg||''}</div></div>`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(), 250); }, 3500);
+}
+
+/* ======== Login ======== */
+$('#formLogin').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const u = $('#loginUser').value.trim();
+  const p = $('#loginPass').value;
+  if (cliente.bloqueado) return toast('Cuenta bloqueada', 'Has superado los intentos.', 'error');
+  if (u === cliente.usuario && cliente.verificarPassword(p)) {
+    cliente.intentosFallidos = 0; intentosLogin = 0;
+    $('#login').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    inicializarPanel();
+    toast(`¡Hola, ${cliente.nombre.split(' ')[0]}!`, 'Sesión iniciada correctamente.', 'success');
+  } else {
+    intentosLogin++;
+    cliente.intentosFallidos = intentosLogin;
+    $('#intentos').classList.add('show');
+    $('#intentosNum').textContent = intentosLogin;
+    if (intentosLogin >= 3) {
+      cliente.bloqueado = true;
+      $('#intentos').innerHTML = '🔒 Cuenta bloqueada por 3 intentos fallidos.';
+      toast('Cuenta bloqueada', 'Has superado los 3 intentos.', 'error');
+    } else {
+      toast('Credenciales incorrectas', `Intento ${intentosLogin} de 3.`, 'error');
+    }
+  }
+});
+
+/* ======== Render principal ======== */
+function inicializarPanel() {
+  $('#userNombre').textContent = cliente.nombre;
+  $('#userDoc').textContent = `CC ${cliente.identificacion}`;
+  $('#avatarSide').textContent = iniciales(cliente.nombre);
+  renderTabs();
+  renderSaldo();
+  renderMovimientos();
+  renderStats();
+}
+
+function renderTabs() {
+  const tabs = $('#cuentaTabs');
+  tabs.innerHTML = '';
+  cliente.cuentas.forEach((c) => {
+    const b = document.createElement('button');
+    b.className = 'saldo-tab' + (c === cuentaActiva ? ' active' : '');
+    b.textContent = c.tipo;
+    b.addEventListener('click', () => {
+      cuentaActiva = c;
+      renderTabs(); renderSaldo(); renderMovimientos(); renderStats();
+    });
+    tabs.appendChild(b);
+  });
+}
+
+function renderSaldo() {
+  const c = cuentaActiva;
+  let label = `Saldo disponible · ${c.tipo}`;
+  let monto = c.saldo;
+  if (c instanceof TarjetaCredito) { label = 'Cupo disponible · Tarjeta'; monto = c.cupoDisponible; }
+  $('#saldoLabel').textContent = label;
+  $('#saldoMonto').textContent = saldoVisible ? fmt(monto) : '••••••';
+
+  const last4 = (c.numero.replace(/[^0-9]/g, '').slice(-4) || '0000').padStart(4, '0');
+  $('#cardNumber').innerHTML = saldoVisible
+    ? `<span>••••</span><span>••••</span><span>••••</span><span>${last4}</span>`
+    : `<span>••••</span><span>••••</span><span>••••</span><span>••••</span>`;
+  $('#cardTitular').textContent = cliente.nombre;
+  $('#cardExpira').textContent = ({ Ahorros:'12/28', Corriente:'06/29', Tarjeta:'09/27' })[c.tipo] || '12/28';
+}
+
+function renderMovimientos(limite = 5) {
+  const lista = $('#listaMovs');
+  const movs = cuentaActiva.movimientos.slice(0, limite);
+  if (movs.length === 0) { lista.innerHTML = `<div class="mov-empty">Sin movimientos.</div>`; return; }
+  lista.innerHTML = movs.map(m => movRow(m)).join('');
+  // attach click
+  $$('.movimiento[data-mov]', lista).forEach(el => {
+    el.addEventListener('click', () => {
+      const id = +el.dataset.mov;
+      const mov = cuentaActiva.movimientos.find(x => x.id === id);
+      if (mov) abrirRecibo(mov);
+    });
+  });
+}
+
+function renderStats() {
+  const movs = cuentaActiva.movimientos;
+  const ingresos = movs.filter(m => m.tipo === 'consignacion').reduce((s,m)=>s+m.valor, 0);
+  const gastos = movs.filter(m => ['retiro','transferencia','servicio','recarga','compra'].includes(m.tipo)).reduce((s,m)=>s+m.valor, 0);
+  $('#statIngresos').textContent = fmt(ingresos);
+  $('#statGastos').textContent = fmt(gastos);
+  $('#statCount').textContent = movs.length;
+}
+
+function movIcon(tipo) {
+  const map = {
+    consignacion:  ['consig', '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'],
+    retiro:        ['retiro', '<line x1="5" y1="12" x2="19" y2="12"/>'],
+    transferencia: ['transf', '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>'],
+    servicio:      ['servicio', '<path d="M3 12h2l3-9 6 18 3-9h4"/>'],
+    recarga:       ['recarga', '<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>'],
+    compra:        ['compra', '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>'],
+  };
+  return map[tipo] || map.retiro;
+}
+function movTipoLabel(t) {
+  return ({ consignacion:'Consignación', retiro:'Retiro', transferencia:'Transferencia', servicio:'Pago de servicio', recarga:'Recarga celular', compra:'Compra' })[t] || t;
+}
+function movRow(m) {
+  const [cls, icon] = movIcon(m.tipo);
+  const out = ['retiro','transferencia','servicio','recarga','compra'].includes(m.tipo);
+  const signo = out ? 'out' : 'in';
+  const prefijo = out ? '−' : '+';
+  return `
+    <div class="movimiento" data-mov="${m.id}">
+      <div class="mov-icon ${cls}">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg>
+      </div>
+      <div class="mov-info">
+        <div class="mov-tipo">${movTipoLabel(m.tipo)}${m.descripcion ? ` <span style="color:var(--tinta-3);font-weight:500;font-size:12px">· ${m.descripcion}</span>` : ''}</div>
+        <div class="mov-fecha">${fmtFecha(m.fecha)} · ${opNumero(m.id)}</div>
+      </div>
+      <div class="mov-valor ${signo}">${prefijo}${fmt(m.valor)}</div>
+    </div>`;
+}
+
+/* ======== Modal ======== */
+function abrirModal({ titulo, sub='', body='', footer='', wide=false }) {
+  $('#modalTitulo').textContent = titulo;
+  $('#modalSub').textContent = sub;
+  $('#modalBody').innerHTML = body;
+  $('#modalFooter').innerHTML = footer;
+  $('#modalBox').classList.toggle('wide', !!wide);
+  $('#modal').classList.add('show');
+}
+function cerrarModal() { $('#modal').classList.remove('show'); }
+$('#modalClose').addEventListener('click', cerrarModal);
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') cerrarModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+window.cerrarModal = cerrarModal;
+
+/* ======== Acciones ======== */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const a = btn.dataset.action;
+  ({
+    consultar: accionConsultar, consignar: accionConsignar, retirar: accionRetirar,
+    transferir: accionTransferir, movimientos: accionMovimientos, perfil: accionPerfil,
+    cambiarPass: accionCambiarPass, servicios: accionServicios, recargas: accionRecargas,
+    comprarTC: accionComprarTC, extractos: accionExtractos,
+  })[a]?.();
+});
+$('#verTodos').addEventListener('click', accionMovimientos);
+$('#btnLogout').addEventListener('click', cerrarSesion);
+$('#toggleEye').addEventListener('click', () => { saldoVisible = !saldoVisible; renderSaldo(); });
+$('#btnMenu').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+
+// Dropdowns
+function bindDropdown(id) {
+  const dd = document.getElementById(id);
+  const btn = dd.querySelector('.top-btn');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.dropdown.open').forEach(o => o !== dd && o.classList.remove('open'));
+    dd.classList.toggle('open');
+  });
+  dd.querySelectorAll('.dropdown-item').forEach(b => b.addEventListener('click', () => dd.classList.remove('open')));
+}
+bindDropdown('atajosDropdown');
+bindDropdown('notifDropdown');
+document.addEventListener('click', () => document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open')));
+
+/* ---------- Consultar ---------- */
+function accionConsultar() {
+  const c = cuentaActiva;
+  let info = '';
+  if (c instanceof CuentaAhorros) info = `Tu saldo en <b>Cuenta de Ahorros</b> es <b>${fmt(c.saldo)}</b>. Genera <b>1.5%</b> de interés mensual al retirar.`;
+  else if (c instanceof CuentaCorriente) info = `Tu saldo en <b>Cuenta Corriente</b> es <b>${fmt(c.saldo)}</b>. Tienes 20% de sobregiro: límite <b>${fmt(c.limiteRetiro)}</b>.`;
+  else info = `Cupo total <b>${fmt(c.cupo)}</b>. Deuda actual <b>${fmt(c.deuda)}</b>. Disponible <b>${fmt(c.cupoDisponible)}</b>.`;
+  abrirModal({ titulo: 'Consultar Saldo', sub: c.numero,
+    body: `<div class="info-box">${info}</div>`,
+    footer: `<button class="btn btn-primary" onclick="cerrarModal()">Entendido</button>`
+  });
+}
+
+/* ---------- Consignar ---------- */
+function accionConsignar() {
+  if (cuentaActiva instanceof TarjetaCredito) return abrirModal({
+    titulo: 'No disponible',
+    body: `<div class="info-box warn">⚠ No puedes consignar a una tarjeta de crédito. Selecciona Ahorros o Corriente.</div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>`
+  });
+  abrirModal({ titulo: 'Consignar Dinero', sub: `${cuentaActiva.tipo} · ${cuentaActiva.numero}`,
+    body: `
+      <div class="field"><label>Monto a consignar</label>
+        <input type="number" id="inpMonto" placeholder="0" min="1" step="1000" />
+        <div class="field-hint">Debe ser un valor positivo.</div></div>
+      <div class="field"><label>Concepto (opcional)</label>
+        <input type="text" id="inpConcepto" placeholder="Ej. Ahorro mensual" /></div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnConfConsig">Consignar</button>`
+  });
+  $('#btnConfConsig').addEventListener('click', () => {
+    const monto = parseFloat($('#inpMonto').value);
+    const concepto = $('#inpConcepto').value.trim();
+    try {
+      const m = cuentaActiva.consignar(monto, concepto || 'Consignación en efectivo');
+      cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
+      toast('Consignación exitosa', `${fmt(monto)} · Saldo: ${fmt(cuentaActiva.saldo)}`, 'success');
+      setTimeout(() => abrirRecibo(m), 400);
+    } catch (err) { toast('No se pudo consignar', err.message, 'error'); }
+  });
+}
+
+/* ---------- Retirar ---------- */
+function accionRetirar() {
+  if (cuentaActiva instanceof TarjetaCredito) return abrirModal({
+    titulo: 'No disponible',
+    body: `<div class="info-box warn">⚠ La tarjeta de crédito no permite retiros, solo compras a cuotas.</div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>`
+  });
+  const c = cuentaActiva;
+  const hint = c instanceof CuentaCorriente
+    ? `Límite c/sobregiro: <b>${fmt(c.limiteRetiro)}</b>`
+    : `Saldo: <b>${fmt(c.saldo)}</b>. Se aplicará 1.5% de interés.`;
+  abrirModal({ titulo: 'Retirar Dinero', sub: `${c.tipo} · ${c.numero}`,
+    body: `<div class="field"><label>Monto a retirar</label>
+      <input type="number" id="inpRetiro" min="1" step="1000" placeholder="0" />
+      <div class="field-hint">${hint}</div></div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnConfRetiro">Retirar</button>`
+  });
+  $('#btnConfRetiro').addEventListener('click', () => {
+    const monto = parseFloat($('#inpRetiro').value);
+    try {
+      const r = c.retirar(monto);
+      cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
+      toast('Retiro exitoso', `${fmt(monto)} · Saldo: ${fmt(r.nuevoSaldo)}`, r.sobregiro ? 'warn' : 'success');
+      setTimeout(() => abrirRecibo(r.mov), 400);
+    } catch (err) { toast('No se pudo retirar', err.message, 'error'); }
+  });
+}
+
+/* ---------- Transferir ---------- */
+function accionTransferir() {
+  if (cuentaActiva instanceof TarjetaCredito) return abrirModal({
+    titulo: 'No disponible',
+    body: `<div class="info-box warn">⚠ No se permite transferir desde tarjeta de crédito.</div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>`
+  });
+  const propias = cliente.cuentas.filter(c => c !== cuentaActiva && !(c instanceof TarjetaCredito));
+  abrirModal({ titulo: 'Transferir', sub: `Desde ${cuentaActiva.tipo} · ${cuentaActiva.numero}`,
+    body: `
+      <div class="field"><label>Cuenta destino</label>
+        <select id="selDestino">
+          <optgroup label="Mis cuentas">
+            ${propias.map(c => `<option value="propia:${c.numero}">${c.tipo} · ${c.numero}</option>`).join('')}
+          </optgroup>
+          <optgroup label="Otros usuarios">
+            ${otroCliente.cuentas.map(c => `<option value="ext:${c.numero}">${otroCliente.nombre} · ${c.tipo} · ${c.numero}</option>`).join('')}
+          </optgroup>
+        </select>
+        <div class="field-hint">No se permite transferir al mismo producto del mismo usuario.</div></div>
+      <div class="field"><label>Monto</label>
+        <input type="number" id="inpTrans" min="1" step="1000" placeholder="0" /></div>
+      <div class="field"><label>Concepto (opcional)</label>
+        <input type="text" id="inpTransConcepto" placeholder="Ej. Pago amigo" /></div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnConfTrans">Transferir</button>`
+  });
+  $('#btnConfTrans').addEventListener('click', () => {
+    try {
+      const sel = $('#selDestino').value;
+      const monto = parseFloat($('#inpTrans').value);
+      const concepto = $('#inpTransConcepto').value.trim() || 'Transferencia entre cuentas';
+      if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+      const [scope, num] = sel.split(':');
+      const pool = scope === 'propia' ? cliente.cuentas : otroCliente.cuentas;
+      const destino = pool.find(c => c.numero === num);
+      if (!destino) throw new Error('Cuenta destino no encontrada');
+      if (destino.tipo === cuentaActiva.tipo && scope === 'propia') throw new Error('No puedes transferir al mismo producto del mismo usuario');
+      const limite = (cuentaActiva instanceof CuentaCorriente) ? cuentaActiva.limiteRetiro : cuentaActiva.saldo;
+      if (monto > limite) throw new Error('Monto excede saldo disponible');
+
+      cuentaActiva.saldo -= monto;
+      destino.saldo += monto;
+      const m = new Movimiento('transferencia', monto, concepto, { destino: destino.numero, destinoTitular: destino.titular, destinoTipo: destino.tipo });
+      cuentaActiva.registrarMovimiento(m);
+      destino.registrarMovimiento(new Movimiento('consignacion', monto, `Recibida de ${cuentaActiva.titular}`, { origen: cuentaActiva.numero }));
+
+      cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
+      toast('Transferencia exitosa', `${fmt(monto)} a ${destino.tipo} ${destino.numero}`, 'success');
+      setTimeout(() => abrirRecibo(m), 400);
+    } catch (err) { toast('No se pudo transferir', err.message, 'error'); }
+  });
+}
+
+/* ---------- Servicios ---------- */
+const SERVICIOS = [
+  { id:'epm', nombre:'EPM', emoji:'💡' }, { id:'claro', nombre:'Claro Hogar', emoji:'📡' },
+  { id:'tigo', nombre:'Tigo', emoji:'📶' }, { id:'agua', nombre:'Acueducto', emoji:'💧' },
+  { id:'gas', nombre:'Gas Natural', emoji:'🔥' }, { id:'iss', nombre:'EPS Sura', emoji:'⚕️' },
+];
+function accionServicios() {
+  if (cuentaActiva instanceof TarjetaCredito) return toast('No disponible', 'Selecciona Ahorros o Corriente', 'warn');
+  abrirModal({ titulo: 'Pagar servicios', sub: `Desde ${cuentaActiva.tipo}`,
+    body: `
+      <div class="servicios-grid" id="serviciosGrid">
+        ${SERVICIOS.map(s => `
+          <button class="servicio-btn" data-srv="${s.id}">
+            <div class="servicio-emoji">${s.emoji}</div>
+            <div class="servicio-nombre">${s.nombre}</div>
+          </button>`).join('')}
+      </div>
+      <div class="field"><label>Número de cuenta o referencia</label>
+        <input type="text" id="srvRef" placeholder="Ej. 1234567890" /></div>
+      <div class="field"><label>Monto</label>
+        <input type="number" id="srvMonto" min="1" step="1000" placeholder="0" /></div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnPagarSrv">Pagar</button>`
+  });
+  let srv = null;
+  $$('.servicio-btn').forEach(b => b.addEventListener('click', () => {
+    $$('.servicio-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    srv = SERVICIOS.find(s => s.id === b.dataset.srv);
+  }));
+  $('#btnPagarSrv').addEventListener('click', () => {
+    try {
+      if (!srv) throw new Error('Selecciona un servicio');
+      const ref = $('#srvRef').value.trim();
+      const monto = parseFloat($('#srvMonto').value);
+      if (!ref) throw new Error('Ingresa el número de referencia');
+      if (!Number.isFinite(monto) || monto <= 0) throw new Error('Monto inválido');
+      const limite = (cuentaActiva instanceof CuentaCorriente) ? cuentaActiva.limiteRetiro : cuentaActiva.saldo;
+      if (monto > limite) throw new Error('Saldo insuficiente');
+      cuentaActiva.saldo -= monto;
+      const m = new Movimiento('servicio', monto, `${srv.nombre} · Ref ${ref}`, { empresa: srv.nombre, referencia: ref });
+      cuentaActiva.registrarMovimiento(m);
+      cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
+      toast('Pago exitoso', `${srv.nombre} · ${fmt(monto)}`, 'success');
+      setTimeout(() => abrirRecibo(m), 400);
+    } catch (err) { toast('No se pudo pagar', err.message, 'error'); }
+  });
+}
+
+/* ---------- Recargas ---------- */
+const OPERADORES = [
+  { id:'claro', nombre:'Claro', emoji:'🔴' }, { id:'movistar', nombre:'Movistar', emoji:'🔵' },
+  { id:'tigo', nombre:'Tigo', emoji:'🟡' }, { id:'wom', nombre:'WOM', emoji:'🟣' },
+];
+const MONTOS_RECARGA = [5000, 10000, 20000, 50000];
+function accionRecargas() {
+  if (cuentaActiva instanceof TarjetaCredito) return toast('No disponible', 'Selecciona Ahorros o Corriente', 'warn');
+  abrirModal({ titulo: 'Recargar celular', sub: `Desde ${cuentaActiva.tipo}`,
+    body: `
+      <div class="servicios-grid" id="opGrid">
+        ${OPERADORES.map(o => `
+          <button class="servicio-btn" data-op="${o.id}">
+            <div class="servicio-emoji">${o.emoji}</div>
+            <div class="servicio-nombre">${o.nombre}</div>
+          </button>`).join('')}
+      </div>
+      <div class="field"><label>Número celular</label>
+        <input type="tel" id="recCel" placeholder="3001234567" maxlength="10" /></div>
+      <div class="field"><label>Monto</label>
+        <div class="cuotas-grid" id="montosGrid" style="grid-template-columns:repeat(4,1fr)">
+          ${MONTOS_RECARGA.map(m => `<button class="cuota-btn" data-monto="${m}">${fmt(m)}</button>`).join('')}
+        </div>
+      </div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnRecargar">Recargar</button>`
+  });
+  let op = null, monto = null;
+  $$('.servicio-btn').forEach(b => b.addEventListener('click', () => {
+    $$('.servicio-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    op = OPERADORES.find(o => o.id === b.dataset.op);
+  }));
+  $$('.cuota-btn').forEach(b => b.addEventListener('click', () => {
+    $$('.cuota-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+    monto = parseFloat(b.dataset.monto);
+  }));
+  $('#btnRecargar').addEventListener('click', () => {
+    try {
+      if (!op) throw new Error('Selecciona un operador');
+      if (!monto) throw new Error('Selecciona un monto');
+      const cel = $('#recCel').value.trim();
+      if (!/^\d{10}$/.test(cel)) throw new Error('Celular inválido (10 dígitos)');
+      const limite = (cuentaActiva instanceof CuentaCorriente) ? cuentaActiva.limiteRetiro : cuentaActiva.saldo;
+      if (monto > limite) throw new Error('Saldo insuficiente');
+      cuentaActiva.saldo -= monto;
+      const m = new Movimiento('recarga', monto, `${op.nombre} · ${cel}`, { operador: op.nombre, celular: cel });
+      cuentaActiva.registrarMovimiento(m);
+      cerrarModal(); renderSaldo(); renderMovimientos(); renderStats();
+      toast('Recarga exitosa', `${op.nombre} ${cel} · ${fmt(monto)}`, 'success');
+      setTimeout(() => abrirRecibo(m), 400);
+    } catch (err) { toast('No se pudo recargar', err.message, 'error'); }
+  });
+}
+
+/* ---------- Compra a cuotas ---------- */
+function accionComprarTC() {
+  if (!(cuentaActiva instanceof TarjetaCredito)) {
+    cuentaActiva = tarjeta; renderTabs(); renderSaldo(); renderMovimientos(); renderStats();
+  }
+  const tc = tarjeta;
+  abrirModal({ titulo: 'Comprar a cuotas', sub: `Tarjeta · Cupo disponible ${fmt(tc.cupoDisponible)}`,
+    body: `
+      <div class="field"><label>Descripción de la compra</label>
+        <input type="text" id="cpDesc" placeholder="Ej. Almacenes Éxito" /></div>
+      <div class="field"><label>Monto</label>
+        <input type="number" id="cpMonto" min="1" step="1000" placeholder="0" /></div>
+      <div class="field"><label>Número de cuotas</label>
+        <div class="cuotas-grid" id="cuotasGrid">
+          ${[1,2,3,6,12,24].map(n => `<button class="cuota-btn" data-c="${n}">${n}</button>`).join('')}
+        </div>
+        <div class="field-hint">≤2 cuotas: sin interés · 3-6: 1.9% mensual · ≥7: 2.3% mensual</div></div>
+      <div id="cpResumen" class="info-box" style="display:none"></div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnConfComprar">Confirmar compra</button>`
+  });
+  let cuotas = null;
+  function actualizarResumen() {
+    const monto = parseFloat($('#cpMonto').value);
+    if (!Number.isFinite(monto) || monto <= 0 || !cuotas) { $('#cpResumen').style.display='none'; return; }
+    const cm = TarjetaCredito.cuotaMensual(monto, cuotas);
+    const tasa = TarjetaCredito.tasa(cuotas);
+    const total = cm * cuotas;
+    $('#cpResumen').style.display = 'block';
+    $('#cpResumen').innerHTML = `
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Cuota mensual:</span><b>${fmt(cm)}</b></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Tasa de interés:</span><b>${(tasa*100).toFixed(1)}% mensual</b></div>
+      <div style="display:flex;justify-content:space-between"><span>Total a pagar:</span><b>${fmt(total)}</b></div>`;
+  }
+  $$('.cuota-btn').forEach(b => b.addEventListener('click', () => {
+    $$('.cuota-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected'); cuotas = +b.dataset.c; actualizarResumen();
+  }));
+  $('#cpMonto').addEventListener('input', actualizarResumen);
+  $('#btnConfComprar').addEventListener('click', () => {
+    try {
+      const monto = parseFloat($('#cpMonto').value);
+      const desc = $('#cpDesc').value.trim() || 'Compra';
+      if (!cuotas) throw new Error('Selecciona el número de cuotas');
+      const r = tc.comprar(monto, cuotas, desc);
+      cerrarModal();
+      cuentaActiva = tc; renderTabs(); renderSaldo(); renderMovimientos(); renderStats();
+      toast('Compra realizada', `${fmt(monto)} en ${cuotas} cuotas de ${fmt(r.cuotaMensual)}`, 'success');
+      setTimeout(() => abrirRecibo(r.mov), 400);
+    } catch (err) { toast('No se pudo procesar', err.message, 'error'); }
+  });
+}
+
+/* ---------- Movimientos completos ---------- */
+function accionMovimientos() {
+  abrirModal({ titulo: 'Historial de movimientos', sub: `${cuentaActiva.tipo} · ${cuentaActiva.numero}`, wide: true,
+    body: cuentaActiva.movimientos.length
+      ? `<div style="max-height:60vh;overflow-y:auto">${cuentaActiva.movimientos.map(m=>movRow(m)).join('')}</div>`
+      : '<div class="mov-empty">Sin movimientos.</div>',
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>
+             <button class="btn btn-primary" data-action="extractos" onclick="cerrarModal()">Ver extractos</button>`
+  });
+  // attach clicks for opening recibos
+  $$('#modalBody .movimiento[data-mov]').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = +el.dataset.mov;
+      const mov = cuentaActiva.movimientos.find(x => x.id === id);
+      if (mov) { cerrarModal(); setTimeout(() => abrirRecibo(mov), 200); }
+    });
+  });
+}
+
+/* ---------- Extractos ---------- */
+let extractoFiltro = 'todos';
+function accionExtractos() {
+  abrirModal({ titulo: 'Extractos', sub: `${cuentaActiva.tipo} · ${cuentaActiva.numero}`, wide: true,
+    body: `
+      <div class="extracto-tabs" id="extractoTabs">
+        <button class="extracto-tab ${extractoFiltro==='todos'?'active':''}" data-f="todos">Todos</button>
+        <button class="extracto-tab ${extractoFiltro==='consignacion'?'active':''}" data-f="consignacion">Consignaciones</button>
+        <button class="extracto-tab ${extractoFiltro==='retiro'?'active':''}" data-f="retiro">Retiros</button>
+        <button class="extracto-tab ${extractoFiltro==='transferencia'?'active':''}" data-f="transferencia">Transferencias</button>
+        <button class="extracto-tab ${extractoFiltro==='servicio'?'active':''}" data-f="servicio">Servicios</button>
+        <button class="extracto-tab ${extractoFiltro==='compra'?'active':''}" data-f="compra">Compras</button>
+      </div>
+      <div id="extractoLista" style="max-height:55vh;overflow-y:auto"></div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--linea);font-size:12px;color:var(--tinta-3);text-align:center">
+        💡 Toca cualquier movimiento para ver el recibo y descargarlo
+      </div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>
+             <button class="btn btn-primary" id="btnDescExtracto">⬇ Descargar extracto completo</button>`
+  });
+  function renderLista() {
+    const movs = extractoFiltro === 'todos' ? cuentaActiva.movimientos : cuentaActiva.movimientos.filter(m => m.tipo === extractoFiltro);
+    $('#extractoLista').innerHTML = movs.length ? movs.map(m=>movRow(m)).join('') : '<div class="mov-empty">Sin movimientos en este filtro.</div>';
+    $$('#extractoLista .movimiento[data-mov]').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = +el.dataset.mov;
+        const mov = cuentaActiva.movimientos.find(x => x.id === id);
+        if (mov) abrirRecibo(mov);
+      });
+    });
+  }
+  $$('#extractoTabs .extracto-tab').forEach(b => b.addEventListener('click', () => {
+    extractoFiltro = b.dataset.f;
+    $$('#extractoTabs .extracto-tab').forEach(x => x.classList.toggle('active', x === b));
+    renderLista();
+  }));
+  renderLista();
+  $('#btnDescExtracto').addEventListener('click', descargarExtractoCompleto);
+}
+
+/* ---------- Recibo (detalle imprimible) ---------- */
+function buildReciboHTML(m) {
+  const c = cuentaActiva;
+  const out = ['retiro','transferencia','servicio','recarga','compra'].includes(m.tipo);
+  const tipo = movTipoLabel(m.tipo);
+  const meta = m.meta || {};
+  const filas = [
+    ['Número de operación', opNumero(m.id)],
+    ['Fecha y hora', fmtFechaLarga(m.fecha)],
+    ['Tipo', tipo],
+    ['Cuenta origen', `${c.tipo} · ${c.numero}`],
+    ['Titular', cliente.nombre],
+  ];
+  if (m.descripcion) filas.push(['Concepto', m.descripcion]);
+  if (meta.destino) filas.push(['Destino', `${meta.destinoTipo || ''} · ${meta.destino}`]);
+  if (meta.destinoTitular) filas.push(['Beneficiario', meta.destinoTitular]);
+  if (meta.empresa) filas.push(['Empresa', meta.empresa]);
+  if (meta.referencia) filas.push(['Referencia', meta.referencia]);
+  if (meta.operador) filas.push(['Operador', meta.operador]);
+  if (meta.celular) filas.push(['Celular', meta.celular]);
+  if (meta.cuotas) filas.push(['Cuotas', `${meta.cuotas} (${(meta.tasa*100).toFixed(1)}% mensual)`]);
+  if (meta.cuotaMensual) filas.push(['Cuota mensual', fmt(meta.cuotaMensual)]);
+  if (meta.interes) filas.push(['Interés acreditado', fmt(meta.interes)]);
+  if (meta.sobregiro) filas.push(['Modalidad', 'Con sobregiro']);
+
+  return `
+    <div class="recibo">
+      <div class="recibo-header">
+        <div class="marca">Mi Plata</div>
+        <div class="sub">Banca Digital · Comprobante</div>
+      </div>
+      <div style="text-align:center"><span class="recibo-status">✓ Aprobado</span></div>
+      <div class="recibo-tipo">${tipo}</div>
+      <div class="recibo-monto ${out ? 'out' : 'in'}">${out ? '−' : '+'}${fmt(m.valor)}</div>
+      <div class="recibo-fecha">${fmtFechaLarga(m.fecha)}</div>
+      <div class="recibo-divider"></div>
+      ${filas.map(([k,v]) => `<div class="recibo-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}
+      <div class="recibo-foot">Mi Plata · Sucursal Digital · ${opNumero(m.id)}<br/>Conserve este comprobante</div>
+    </div>`;
+}
+
+function abrirRecibo(m) {
+  const html = buildReciboHTML(m);
+  abrirModal({ titulo: 'Comprobante', sub: 'Detalle de la transacción',
+    body: html,
+    footer: `
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>
+      <button class="btn btn-ghost" id="btnReciboDesc">⬇ Descargar</button>
+      <button class="btn btn-primary" id="btnReciboPrint">🖨 Imprimir / Guardar PDF</button>`
+  });
+  $('#btnReciboPrint').addEventListener('click', () => imprimirRecibo(m));
+  $('#btnReciboDesc').addEventListener('click', () => descargarRecibo(m));
+}
+
+function imprimirRecibo(m) {
+  $('#reciboPrintable').innerHTML = buildReciboHTML(m);
+  $('#reciboPrintable').style.display = 'block';
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => { $('#reciboPrintable').style.display = 'none'; }, 500);
+  }, 100);
+}
+
+function descargarRecibo(m) {
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo ${opNumero(m.id)} · Mi Plata</title>
+    <style>
+      body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fff6f8; padding: 30px; color: #2d1a24; }
+      .recibo { max-width: 480px; margin: 0 auto; background: #fff; border: 2px dashed #ffbccc; border-radius: 16px; padding: 30px; }
+      .recibo-header { text-align: center; border-bottom: 1px dashed #f2dde4; padding-bottom: 14px; margin-bottom: 14px; }
+      .recibo-header .marca { font-weight: 800; font-size: 22px; color: #b33b5e; }
+      .recibo-header .sub { font-size: 11px; color: #8c7884; letter-spacing: .14em; text-transform: uppercase; margin-top: 4px; }
+      .recibo-status { display: inline-block; background: #e6f7ef; color: #2bb07a; padding: 4px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+      .recibo-tipo { text-align: center; font-size: 13px; font-weight: 700; color: #b33b5e; text-transform: uppercase; letter-spacing: .12em; margin: 14px 0; }
+      .recibo-monto { text-align: center; font-size: 36px; font-weight: 800; margin: 8px 0; color: #d94a5a; }
+      .recibo-monto.in { color: #2bb07a; }
+      .recibo-fecha { text-align: center; font-size: 12px; color: #8c7884; margin-bottom: 14px; }
+      .recibo-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+      .recibo-row .k { color: #8c7884; }
+      .recibo-row .v { font-weight: 700; }
+      .recibo-divider { border-top: 1px dashed #f2dde4; margin: 14px 0; }
+      .recibo-foot { text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px dashed #f2dde4; font-size: 10px; color: #8c7884; letter-spacing: .08em; text-transform: uppercase; }
+    </style></head><body>${buildReciboHTML(m)}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Recibo-${opNumero(m.id)}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Recibo descargado', 'Guardado en tu dispositivo', 'success');
+}
+
+function descargarExtractoCompleto() {
+  const c = cuentaActiva;
+  const movs = extractoFiltro === 'todos' ? c.movimientos : c.movimientos.filter(m => m.tipo === extractoFiltro);
+  let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Extracto ${c.numero} · Mi Plata</title>
+    <style>
+      body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fff6f8; padding: 30px; color: #2d1a24; max-width: 720px; margin: 0 auto; }
+      .head { background: linear-gradient(135deg, #f47c9a, #b33b5e); color: #fff; padding: 24px; border-radius: 16px; margin-bottom: 18px; }
+      .head h1 { margin: 0; font-size: 22px; }
+      .head .sub { opacity: .85; font-size: 13px; margin-top: 4px; }
+      .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #fff; padding: 18px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #f2dde4; }
+      .meta div b { display: block; font-size: 11px; color: #8c7884; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; font-weight: 600; }
+      table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #f2dde4; }
+      th, td { padding: 10px 14px; text-align: left; font-size: 13px; border-bottom: 1px solid #f2dde4; }
+      th { background: #ffeaf0; color: #b33b5e; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+      tr:last-child td { border-bottom: 0; }
+      .out { color: #d94a5a; font-weight: 700; }
+      .in { color: #2bb07a; font-weight: 700; }
+      .foot { margin-top: 20px; text-align: center; font-size: 11px; color: #8c7884; }
+    </style></head><body>
+    <div class="head"><h1>Extracto · Mi Plata</h1><div class="sub">${c.tipo} · ${c.numero} · ${cliente.nombre}</div></div>
+    <div class="meta">
+      <div><b>Titular</b>${cliente.nombre}</div>
+      <div><b>Identificación</b>CC ${cliente.identificacion}</div>
+      <div><b>Cuenta</b>${c.numero}</div>
+      <div><b>Tipo</b>${c.tipo}</div>
+      <div><b>Saldo actual</b>${fmt(c.saldo)}</div>
+      <div><b>Generado</b>${fmtFechaLarga(new Date())}</div>
+    </div>
+    <table><thead><tr><th>Fecha</th><th>Op #</th><th>Tipo</th><th>Concepto</th><th style="text-align:right">Valor</th></tr></thead><tbody>
+      ${movs.map(m => {
+        const out = ['retiro','transferencia','servicio','recarga','compra'].includes(m.tipo);
+        return `<tr>
+          <td>${fmtFecha(m.fecha)}</td>
+          <td>${opNumero(m.id)}</td>
+          <td>${movTipoLabel(m.tipo)}</td>
+          <td>${m.descripcion || '—'}</td>
+          <td style="text-align:right" class="${out?'out':'in'}">${out?'−':'+'}${fmt(m.valor)}</td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>
+    <div class="foot">Mi Plata · Banca Digital · Documento generado automáticamente</div>
+    </body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Extracto-${c.numero}-${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Extracto descargado', 'Lo puedes abrir e imprimir como PDF', 'success');
+}
+
+/* ---------- Perfil ---------- */
+function accionPerfil() {
+  abrirModal({ titulo: 'Mi Perfil', sub: 'Edita tus datos personales',
+    body: `
+      <div class="field"><label>Nombre completo</label><input id="pfNombre" value="${cliente.nombre}" /></div>
+      <div class="field"><label>Identificación</label><input id="pfId" value="${cliente.identificacion}" /></div>
+      <div class="field"><label>Celular</label><input id="pfCel" value="${cliente.celular}" /></div>
+      <div class="field"><label>Usuario</label><input id="pfUser" value="${cliente.usuario}" /></div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--linea)">
+        <button class="btn btn-ghost" id="btnAbrirCambioPass" style="width:100%;justify-content:center">🔒 Cambiar contraseña</button></div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnGuardarPerfil">Guardar cambios</button>`
+  });
+  $('#btnGuardarPerfil').addEventListener('click', () => {
+    cliente.nombre = $('#pfNombre').value.trim();
+    cliente.identificacion = $('#pfId').value.trim();
+    cliente.celular = $('#pfCel').value.trim();
+    cliente.usuario = $('#pfUser').value.trim();
+    inicializarPanel(); cerrarModal();
+    toast('Perfil actualizado', 'Tus cambios se guardaron', 'success');
+  });
+  $('#btnAbrirCambioPass').addEventListener('click', () => { cerrarModal(); accionCambiarPass(); });
+}
+
+/* ---------- Cambiar contraseña ---------- */
+function accionCambiarPass() {
+  abrirModal({ titulo: 'Cambiar contraseña', sub: 'Por seguridad, confirma con tu clave actual',
+    body: `
+      <div class="field"><label>Usuario</label><input id="cpUser" value="${cliente.usuario}" readonly style="background:var(--rosa-100);color:var(--tinta-2)" /></div>
+      <div class="field"><label>Clave actual</label><input type="password" id="cpActual" /></div>
+      <div class="field"><label>Nueva clave</label><input type="password" id="cpNueva" /></div>
+      <div class="field"><label>Confirmar nueva clave</label><input type="password" id="cpConfirma" /></div>`,
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-primary" id="btnGuardarPass">Guardar</button>`
+  });
+  $('#btnGuardarPass').addEventListener('click', () => {
+    const a = $('#cpActual').value, n = $('#cpNueva').value, c = $('#cpConfirma').value;
+    if (!cliente.verificarPassword(a)) return toast('Clave incorrecta', 'No coincide', 'error');
+    if (!n || n.length < 4) return toast('Clave inválida', 'Mínimo 4 caracteres', 'error');
+    if (n !== c) return toast('No coincide', 'La confirmación no coincide', 'error');
+    cliente.password = n; cerrarModal();
+    toast('Contraseña actualizada', 'Recuerda usarla', 'success');
+  });
+}
+
+/* ---------- Cerrar Sesión ---------- */
+function cerrarSesion() {
+  abrirModal({ titulo: '¿Cerrar sesión?', sub: 'Tendrás que volver a iniciar sesión.',
+    body: '',
+    footer: `<button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+             <button class="btn btn-danger" id="btnConfirmLogout">Sí, cerrar sesión</button>`
+  });
+  $('#btnConfirmLogout').addEventListener('click', () => {
+    cerrarModal();
+    $('#app').classList.add('hidden');
+    $('#login').classList.remove('hidden');
+    $('#loginPass').value = '';
+    intentosLogin = 0; cliente.intentosFallidos = 0;
+    $('#intentos').classList.remove('show');
+    toast('Sesión cerrada', '¡Hasta pronto!', 'success');
+  });
+}
+</script>
+
+</body>
+</html>
