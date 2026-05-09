@@ -1133,8 +1133,8 @@
 
 /* ======== POO: clases con herencia y polimorfismo ======== */
 class Movimiento {
-  static lastId = 1000;
   constructor(tipo, valor, descripcion = '', meta = {}) {
+    if (!Movimiento.lastId) Movimiento.lastId = 1000;
     this.id = ++Movimiento.lastId;
     this.fecha = new Date();
     this.tipo = tipo; // consignacion | retiro | transferencia | servicio | recarga | compra
@@ -1145,18 +1145,18 @@ class Movimiento {
 }
 
 class Cuenta {
-  #saldo;
+  _saldo;
   constructor(numero, titular, saldoInicial = 0) {
     this.numero = numero;
     this.titular = titular;
-    this.#saldo = saldoInicial;
+    this._saldo = saldoInicial;
     this.movimientos = [];
   }
-  get saldo() { return this.#saldo; }
-  set saldo(v) { this.#saldo = v; }
+  get saldo() { return this._saldo; }
+  set saldo(v) { this._saldo = v; }
   consignar(monto, desc='Consignación en efectivo', meta={}) {
     if (!Number.isFinite(monto) || monto <= 0) throw new Error('El monto debe ser positivo');
-    this.#saldo += monto;
+    this._saldo += monto;
     const m = new Movimiento('consignacion', monto, desc, meta);
     this.movimientos.unshift(m);
     return m;
@@ -1354,8 +1354,8 @@ function renderSaldo() {
   let label = `Saldo disponible · ${c.tipo}`;
   let monto = c.saldo;
   if (c instanceof TarjetaCredito) { label = 'Cupo disponible · Tarjeta'; monto = c.cupoDisponible; }
-  $('#saldoLabel').textContent = label;
-  $('#saldoMonto').textContent = saldoVisible ? fmt(monto) : '••••••';
+  $('_saldoLabel').textContent = label;
+  $('_saldoMonto').textContent = saldoVisible ? fmt(monto) : '••••••';
 
   const last4 = (c.numero.replace(/[^0-9]/g, '').slice(-4) || '0000').padStart(4, '0');
   $('#cardNumber').innerHTML = saldoVisible
