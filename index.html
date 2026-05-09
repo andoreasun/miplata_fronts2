@@ -1354,8 +1354,8 @@ function renderSaldo() {
   let label = `Saldo disponible · ${c.tipo}`;
   let monto = c.saldo;
   if (c instanceof TarjetaCredito) { label = 'Cupo disponible · Tarjeta'; monto = c.cupoDisponible; }
-  $('_saldoLabel').textContent = label;
-  $('_saldoMonto').textContent = saldoVisible ? fmt(monto) : '••••••';
+  $('#saldoLabel').textContent = label;
+  $('#saldoMonto').textContent = saldoVisible ? fmt(monto) : '••••••';
 
   const last4 = (c.numero.replace(/[^0-9]/g, '').slice(-4) || '0000').padStart(4, '0');
   $('#cardNumber').innerHTML = saldoVisible
